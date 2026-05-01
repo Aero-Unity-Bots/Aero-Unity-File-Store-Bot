@@ -6,6 +6,7 @@ from pyrogram.enums import ParseMode
 import os
 import sys
 import random
+import psutil
 
 IMAGES = [
     "https://graph.org/file/98245197c3a4185b49dbe-3df65fb012e4195cff.jpg",
@@ -68,45 +69,46 @@ async def start(client, message: Message):
         )
 
         if data.get("file_type") == "video":
-          sent = await message.reply_video(
-              data["file_id"],
-              caption=caption,
-              reply_markup=buttons,
-              thumb=data.get("thumb"),
-              supports_streaming=True
-        )
+            sent = await message.reply_video(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                thumb=data.get("thumb") if data.get("thumb") else None,
+                supports_streaming=True,
+                parse_mode=ParseMode.MARKDOWN
+        ) 
 
         elif data.get("file_type") == "audio":
-          sent = await message.reply_audio(
-              data["file_id"],
-              caption=caption,
-              reply_markup=buttons,
-             parse_mode=ParseMode.MARKDOWN
+            sent = await message.reply_audio(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
         )
 
         elif data.get("file_type") == "document":
-          sent = await message.reply_document(
-              data["file_id"],
-              caption=caption,
-              reply_markup=buttons,
-              parse_mode=ParseMode.MARKDOWN
+            sent = await message.reply_document(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
         )
- 
+
         elif data.get("file_type") == "sticker":
-          sent = await message.reply_sticker(
-              data["file_id"]
+            sent = await message.reply_sticker(
+                data["file_id"]
         )
 
         elif data.get("file_type") == "animation":  # GIF
-          sent = await message.reply_animation(
-              data["file_id"],
-              caption=caption,
-              reply_markup=buttons,
-              parse_mode=ParseMode.MARKDOWN
+            sent = await message.reply_animation(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
         )
 
         else:
-             return await message.reply_text("‼️ Uɴsᴜᴘᴘᴏʀᴛᴇᴅ Fᴏʀᴍᴀᴛ")
+            return await message.reply_text("‼️ Unsupported format")
             
         warn = await message.reply_text(
     " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
@@ -170,25 +172,29 @@ async def save_media(client, message: Message):
 
     # Detect file type
     if message.video:
-    file = message.video
-    file_type = "video"
-    thumb = file.thumbs[-1].file_id if file.thumbs else None
+        file = message.video
+        file_type = "video"
+        thumb = file.thumbs[-1].file_id if file.thumbs else None
 
     elif message.audio:
         file = message.audio
         file_type = "audio"
+        thumb = None
 
     elif message.document:
         file = message.document
         file_type = "document"
+        thumb = None
 
     elif message.sticker:
         file = message.sticker
         file_type = "sticker"
+        thumb = None
 
     elif message.animation:  # GIF
         file = message.animation
         file_type = "animation"
+        thumb = None
 
     else:
         return await message.reply_text("‼️ Uɴsᴜᴘᴘᴏʀᴛᴇᴅ Fᴏʀᴍᴀᴛ")
@@ -219,15 +225,18 @@ async def stats(client, message: Message):
         [[InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ", callback_data="refresh_stats")]]
     )
 
+    process = psutil.Process()
+    memory = process.memory_info().rss / (1024 * 1024)
+
     await message.reply_text(
         f"📊 **𝗕𝗼𝘁 𝗦𝘁𝗮𝘁𝘂𝘀**\n\n"
         f"👥 Usᴇʀs: {total}\n"
         f"⏱ Uᴘᴛɪᴍᴇ: {hours}h {minutes}m {seconds}s\n"
         f"⚡ Pɪɴɢ: {ping} ms\n"
+        f"🧠 Mᴇᴍᴏʀʏ Usᴀɢᴇ: {memory:.2f} MB\n"
         f"🧾 Vᴇʀsɪᴏɴ: {BOT_VERSION}",
         reply_markup=keyboard
     )
-
 # BROADCAST
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast(client, message: Message):
@@ -260,7 +269,11 @@ async def broadcast(client, message: Message):
         f"◇ Uɴsᴜᴄᴄᴇssғᴜʟ: {failed}"
     )
     
-@app.on_message(filters.private & ~filters.service & ~filters.command(["addadmin", "removeadmin"]))
+@app.on_message(
+    filters.private &
+    ~filters.service &
+    ~filters.command(["addadmin", "removeadmin", "adminlist"])
+)
 async def auto_add_user(client, message: Message):
     if message.from_user:
         await add_user(message.from_user.id)
@@ -409,11 +422,15 @@ async def refresh_stats(client, query):
         [[InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ", callback_data="refresh_stats")]]
     )
 
+    process = psutil.Process()
+    memory = process.memory_info().rss / (1024 * 1024)
+    
     await query.message.edit_text(
         f"📊 **𝗕𝗼𝘁 𝗦𝘁𝗮𝘁𝘂𝘀**\n\n"
         f"👥 Usᴇʀs: {total}\n"
         f"⏱ Uᴘᴛɪᴍᴇ: {hours}h {minutes}m {seconds}s\n"
         f"⚡ Pɪɴɢ: {ping} ms\n"
+        f"🧠 Mᴇᴍᴏʀʏ Usᴀɢᴇ: {memory:.2f} MB\n"
         f"🧾 Vᴇʀsɪᴏɴ: {BOT_VERSION}",
         reply_markup=keyboard
     )
