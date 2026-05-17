@@ -543,11 +543,11 @@ async def main():
 
     await idle()
 
-    await app.stop()
+if __name__ == "__main__":
 
-keep_alive()
+    keep_alive()
 
-app.loop.run_until_complete(main())
+    app.loop.run_until_complete(main())
 
 #don't remove credits 
 #Owner @Mr_Mohammed_29 
