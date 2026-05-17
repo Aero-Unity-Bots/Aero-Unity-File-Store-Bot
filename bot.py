@@ -1,4 +1,4 @@
-from pyrogram import Client, filters
+from pyrogram import Client, filters idle 
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from config import *
 from pyrogram.types import InputMediaPhoto
@@ -543,9 +543,7 @@ async def main():
 
     print("Main Bot Started")
 
-    idle = asyncio.Event()
-
-    await idle.wait()
+    await idle()
 
 
 keep_alive()
