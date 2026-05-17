@@ -506,6 +506,28 @@ async def delete_clone_cmd(client, message):
         "✅ Clone Deleted"
     )
 
+# =========================
+# LOAD ALL CLONES
+# =========================
+
+async def load_all_clones():
+
+    data = await get_all_clones()
+
+    for x in data:
+
+        try:
+
+            await start_clone(
+                x["user_id"],
+                x["bot_token"]
+            )
+
+            print(f"Started Clone @{x['username']}")
+
+        except Exception as e:
+
+            print(f"Clone Error: {e}")
 
 # =========================
 # START BOT
