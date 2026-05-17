@@ -1,4 +1,4 @@
-from pyrogram import Client, filters idle 
+from pyrogram import Client, filters, idle 
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from config import *
 from pyrogram.types import InputMediaPhoto
