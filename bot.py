@@ -71,22 +71,27 @@ async def get_message_id(client, message: Message):
 
 BATCH_USERS = {}
 
+#Only Owner + Admin Can Generate Batch Links
 # ================= BATCH COMMAND =================
 
 @app.on_message(filters.private & filters.command("batch"))
 async def batch(client, message: Message):
 
-    admin = await is_admin(message.from_user.id)
+    user_id = message.from_user.id
 
-    if not admin and message.from_user.id != OWNER_ID:
-        return await message.reply_text("❌ Not allowed")
+    # ONLY OWNER + ADMINS
+    if user_id != OWNER_ID and not await is_admin(user_id):
+        return await message.reply_text(
+            "ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..."
+        )
 
-    BATCH_USERS[message.from_user.id] = {
+    BATCH_USERS[user_id] = {
         "step": "first"
     }
 
-    await message.reply_text("📥 Send FIRST message link")
-
+    await message.reply_text(
+        "Gɪᴠᴇ Mᴇ Bᴀᴛᴄʜ Fɪʀsᴛ Mᴇssᴀɢᴇ 𝗟𝗶𝗻𝗸 ғʀᴏᴍ ʏᴏᴜʀ 𝗗𝗕 𝗖𝗵𝗮𝗻𝗻𝗲𝗹"
+    )
 
 # ================= HANDLE BATCH REPLIES =================
 
@@ -106,13 +111,13 @@ async def handle_batch(client, message: Message):
         f_msg_id, chat_id = await get_message_id(client, message)
 
         if not f_msg_id:
-            return await message.reply_text("❌ Invalid first message link")
+            return await message.reply_text("‼️ Iɴᴠᴀʟɪᴅ Lᴀsᴛ Mᴇssᴀɢᴇ Lɪɴᴋ")
 
         data["first"] = f_msg_id
         data["chat_id"] = chat_id
         data["step"] = "last"
 
-        return await message.reply_text("📤 Send LAST message link")
+        return await message.reply_text("Gɪᴠᴇ Mᴇ Bᴀᴛᴄʜ Lᴀsᴛ Mᴇssᴀɢᴇ 𝗟𝗶𝗻𝗸 ғʀᴏᴍ ʏᴏᴜʀ 𝗗𝗕 𝗖𝗵𝗮𝗻𝗻𝗲𝗹")
 
     # LAST LINK
     elif data["step"] == "last":
@@ -120,13 +125,13 @@ async def handle_batch(client, message: Message):
         l_msg_id, _ = await get_message_id(client, message)
 
         if not l_msg_id:
-            return await message.reply_text("❌ Invalid last message link")
+            return await message.reply_text("‼️ Iɴᴠᴀʟɪᴅ Lᴀsᴛ Mᴇssᴀɢᴇ Lɪɴᴋ")
 
         f_msg_id = data["first"]
 
         if l_msg_id <= f_msg_id:
             return await message.reply_text(
-                "❌ Last message must be greater than first"
+                "‼️ Lᴀsᴛ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ʙᴇ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ ғɪʀsᴛ"
             )
 
         # ENCODE
@@ -141,11 +146,11 @@ async def handle_batch(client, message: Message):
         link = f"https://t.me/{bot_username}?start={base64_string}"
 
         await message.reply_text(
-            f"✅ Batch Generated\n\n`{link}`",
+            f"✅ ʙᴀᴛᴄʜ ʟɪɴᴋs ɢᴇɴᴇʀᴀᴛᴇᴅ\n\n`{link}`",
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton(
-                        "📫 Share",
+                        "🔗 sʜᴀʀᴇ ʟɪɴᴋ",
                         url=f"https://telegram.me/share/url?url={link}"
                     )
                 ]
@@ -174,87 +179,171 @@ async def start(client, message: Message):
     await message.reply_sticker("CAACAgUAAxkBAAEXmw5plIsM5lyaJfj5NwNp13QSrbW9NQACnBsAAlztqVYRMk2x1suA_B4E")
 
     if len(message.command) > 1:
-        file_unique_id = message.command[1]
-        data = await get_file(file_unique_id)
 
-        if not data:
-            return await message.reply_text("🔎 Fɪʟᴇ Is Nᴏᴛ Fᴏᴜɴᴅ, Cᴏɴᴛᴀᴄᴛ Tᴏ Oᴡɴᴇʀ.")
+    param = message.command[1]
 
-        original_caption = data.get("caption", "")
-        caption = (
-    f"**{original_caption}**\n\n"
-    f"**›› Cʜᴀɴɴᴇʟ :** [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
-)
+    # ================= BATCH LINK =================
+    try:
+        decoded = base64.urlsafe_b64decode(
+            param + "=" * (-len(param) % 4)
+        ).decode()
 
-        buttons = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU")]]
+        if decoded.startswith("get-"):
+
+            _, first_id, last_id = decoded.split("-")
+
+            first_id = int(first_id)
+            last_id = int(last_id)
+
+            # START ANIMATION
+            x = await message.reply_text(
+                "🔗 ғɪʟᴇs ʟɪɴᴋs ɢᴇɴᴇʀᴀᴛᴇᴅ..."
+            )
+
+            await asyncio.sleep(0.5)
+            await x.edit_text("✨️ ғɪʟᴇs ʟᴏᴀᴅɪɴɢ...")
+            await asyncio.sleep(0.5)
+            await x.edit_text("⏳️ ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...")
+            await asyncio.sleep(0.5)
+            await x.delete()
+
+            # SEND FILES
+            for msg_id in range(first_id, last_id + 1):
+
+                try:
+                    await client.copy_message(
+                        chat_id=message.chat.id,
+                        from_chat_id=CHANNEL_ID,
+                        message_id=msg_id
+                    )
+
+                    await asyncio.sleep(0.3)
+
+                except Exception as e:
+                    print(e)
+
+            warn = await message.reply_text(
+                " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
+                " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
+                " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs."
+                " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ."
+            )
+
+            return
+
+    except:
+        pass
+
+    # ================= SINGLE FILE =================
+
+    file_unique_id = param
+
+    data = await get_file(file_unique_id)
+
+    if not data:
+        return await message.reply_text(
+            "🔎 Fɪʟᴇ Is Nᴏᴛ Fᴏᴜɴᴅ, Cᴏɴᴛᴀᴄᴛ Tᴏ Oᴡɴᴇʀ."
         )
 
-        if data.get("file_type") == "video":
-            sent = await message.reply_video(
-                data["file_id"],
-                caption=caption,
-                reply_markup=buttons,
-                thumb=data.get("thumb") if data.get("thumb") else None,
-                supports_streaming=True,
-                parse_mode=ParseMode.MARKDOWN
-        ) 
+    original_caption = data.get("caption", "")
 
-        elif data.get("file_type") == "audio":
-            sent = await message.reply_audio(
-                data["file_id"],
-                caption=caption,
-                reply_markup=buttons,
-                parse_mode=ParseMode.MARKDOWN
+    caption = (
+        f"**{original_caption}**\n\n"
+        f"**›› Cʜᴀɴɴᴇʟ :** "
+        f"[ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
+    )
+
+    buttons = InlineKeyboardMarkup(
+        [[
+            InlineKeyboardButton(
+                "ᴜᴘᴅᴀᴛᴇs",
+                url="https://t.me/Anime_UpdatesAU"
+            )
+        ]]
+    )
+
+    if data.get("file_type") == "video":
+
+        sent = await message.reply_video(
+            data["file_id"],
+            caption=caption,
+            reply_markup=buttons,
+            thumb=data.get("thumb")
+            if data.get("thumb") else None,
+            supports_streaming=True,
+            parse_mode=ParseMode.MARKDOWN
         )
 
-        elif data.get("file_type") == "document":
-            sent = await message.reply_document(
-                data["file_id"],
-                caption=caption,
-                reply_markup=buttons,
-                parse_mode=ParseMode.MARKDOWN
+    elif data.get("file_type") == "audio":
+
+        sent = await message.reply_audio(
+            data["file_id"],
+            caption=caption,
+            reply_markup=buttons,
+            parse_mode=ParseMode.MARKDOWN
         )
 
-        elif data.get("file_type") == "sticker":
-            sent = await message.reply_sticker(
-                data["file_id"]
+    elif data.get("file_type") == "document":
+
+        sent = await message.reply_document(
+            data["file_id"],
+            caption=caption,
+            reply_markup=buttons,
+            parse_mode=ParseMode.MARKDOWN
         )
 
-        elif data.get("file_type") == "animation":  # GIF
-            sent = await message.reply_animation(
-                data["file_id"],
-                caption=caption,
-                reply_markup=buttons,
-                parse_mode=ParseMode.MARKDOWN
+    elif data.get("file_type") == "sticker":
+
+        sent = await message.reply_sticker(
+            data["file_id"]
         )
 
-        else:
-            return await message.reply_text("‼️ Unsupported format")
-            
-        warn = await message.reply_text(
-    " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-    " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-    " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
-    " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ.",
-    parse_mode=ParseMode.MARKDOWN
+    elif data.get("file_type") == "animation":
+
+        sent = await message.reply_animation(
+            data["file_id"],
+            caption=caption,
+            reply_markup=buttons,
+            parse_mode=ParseMode.MARKDOWN
         )
 
-        # AFTER FILE ANIMATION
-        m2 = await message.reply_text("ᴍᴏɴᴋᴇʏ ᴅ ʟᴜғғʏ\nɢᴇᴀʀ 𝟻. . .")
-        await asyncio.sleep(0.4)
-        await m2.edit_text("sᴜɴ ɢᴏᴅ ɴɪᴋᴀ!...")
-        await asyncio.sleep(0.5)
-        await m2.delete()
+    else:
+        return await message.reply_text(
+            "‼️ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ғᴏʀᴍᴀᴛ"
+        )
 
-        await asyncio.sleep(300)
+    warn = await message.reply_text(
+        " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
+        " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
+        " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
+        " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ."
+    )
 
-        try:
-           await sent.delete()
-           await warn.delete()
-        except:
-            pass
-        return
+    # AFTER FILE ANIMATION
+    m2 = await message.reply_text(
+        "ᴍᴏɴᴋᴇʏ ᴅ ʟᴜғғʏ\nɢᴇᴀʀ 𝟻..."
+    )
+
+    await asyncio.sleep(0.4)
+
+    await m2.edit_text(
+        "sᴜɴ ɢᴏᴅ ɴɪᴋᴀ!..."
+    )
+
+    await asyncio.sleep(0.5)
+
+    await m2.delete()
+
+    await asyncio.sleep(300)
+
+    try:
+        await sent.delete()
+        await warn.delete()
+
+    except:
+        pass
+
+    return
         
     # START MESSAGE WITH BUTTONS
     photo = random.choice(IMAGES)
