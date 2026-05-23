@@ -7,8 +7,6 @@ import os
 import sys
 import random
 import psutil
-import base64 
-import re
 
 IMAGES = [
     "https://graph.org/file/98245197c3a4185b49dbe-3df65fb012e4195cff.jpg",
@@ -211,7 +209,9 @@ async def save_media(client, message: Message):
     await message.reply_text(f"🔗 𝗛𝗲𝗿𝗲 𝗜𝘀 𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸:\n{link}")
 
 # helper function
-async def get_message_id(client, message: Message):
+import re
+
+async def get_message_id(client, message):
     try:
         if not message.text:
             return None, None
@@ -225,14 +225,11 @@ async def get_message_id(client, message: Message):
             msg_id = int(parts[-1])
             return msg_id, chat_id
 
-        # PUBLIC CHANNEL OR BOT LINK
-        match = re.search(r"t\.me/([^/]+)/(\d+)", link)
+        # PUBLIC LINK
+        match = re.search(r"t\.me/(?:c/)?([^/]+)/(\d+)", link)
         if match:
-            username = match.group(1)
             msg_id = int(match.group(2))
-
-            chat = await client.get_chat(username)
-            return msg_id, chat.id
+            return msg_id, None
 
         return None, None
 
@@ -240,28 +237,59 @@ async def get_message_id(client, message: Message):
         return None, None
         
 #BATCH
-@Client.on_message(filters.private & filters.command("nbatch"))
-async def nbatch(client, message: Message):
+import base64
+
+# helper
+def parse_message_link(link: str):
+    try:
+        link = link.strip()
+
+        if "t.me/c/" in link:
+            parts = link.split("/")
+            chat_id = int("-100" + parts[-2])
+            msg_id = int(parts[-1])
+            return msg_id, chat_id
+
+        elif "t.me/" in link:
+            parts = link.split("/")
+            msg_id = int(parts[-1])
+            return msg_id, None
+
+        return None, None
+    except:
+        return None, None
+
+
+@app.on_message(filters.private & filters.command("batch"))
+async def batch(client, message):
 
     admin = await is_admin(message.from_user.id)
 
     if not admin and message.from_user.id != OWNER_ID:
         return await message.reply_text("❌ Not allowed")
 
-    # STEP 1
-    msg = await message.reply_text("🚀 Send FIRST message link")
-    first = await client.listen(message.chat.id)
+    # FIRST LINK
+    first = await client.ask(
+        chat_id=message.chat.id,
+        text="📥 Send FIRST message link",
+        filters=filters.text,
+        timeout=60
+    )
 
-    f_msg_id, source_channel_id = await get_message_id(client, first)
+    f_msg_id, _ = parse_message_link(first.text)
 
     if not f_msg_id:
         return await first.reply_text("❌ Invalid first link")
 
-    # STEP 2
-    await message.reply_text("📩 Send LAST message link")
-    last = await client.listen(message.chat.id)
+    # LAST LINK
+    last = await client.ask(
+        chat_id=message.chat.id,
+        text="📤 Send LAST message link",
+        filters=filters.text,
+        timeout=60
+    )
 
-    l_msg_id, _ = await get_message_id(client, last)
+    l_msg_id, _ = parse_message_link(last.text)
 
     if not l_msg_id:
         return await last.reply_text("❌ Invalid last link")
@@ -269,15 +297,19 @@ async def nbatch(client, message: Message):
     if l_msg_id <= f_msg_id:
         return await last.reply_text("❌ Last must be greater")
 
-    import base64
-    string = f"get-{f_msg_id}-{l_msg_id}"
-    enc = base64.urlsafe_b64encode(string.encode()).decode().strip("=")
+    # ENCODE
+    data = f"{f_msg_id}-{l_msg_id}"
+    encoded = base64.urlsafe_b64encode(data.encode()).decode().strip("=")
 
-    bot_username = (await client.get_me()).username
-    link = f"https://t.me/{bot_username}?start={enc}"
+    bot = (await client.get_me()).username
+    link = f"https://t.me/{bot}?start={encoded}"
 
-    await message.reply_text(f"✅ Batch Generated\n\n`{link}`")
-
+    await last.reply_text(
+        f"✅ Batch Generated\n\n`{link}`",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Share", url=f"https://t.me/share/url?url={link}")]
+        ])
+    )
 # STATS
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats(client, message: Message):
