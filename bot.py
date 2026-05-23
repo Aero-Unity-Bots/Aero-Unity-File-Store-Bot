@@ -32,6 +32,96 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
+#batch
+import base64 
+
+@app.on_message(filters.command("batch") & filters.private)
+
+BATCH_USERS = {}
+
+# ================= BATCH COMMAND =================
+
+@app.on_message(filters.private & filters.command("batch"))
+async def batch(client, message: Message):
+
+    admin = await is_admin(message.from_user.id)
+
+    if not admin and message.from_user.id != OWNER_ID:
+        return await message.reply_text("❌ Not allowed")
+
+    BATCH_USERS[message.from_user.id] = {
+        "step": "first"
+    }
+
+    await message.reply_text("📥 Send FIRST message link")
+
+
+# ================= HANDLE BATCH REPLIES =================
+
+@app.on_message(filters.private & filters.text)
+async def handle_batch(client, message: Message):
+
+    user_id = message.from_user.id
+
+    if user_id not in BATCH_USERS:
+        return
+
+    data = BATCH_USERS[user_id]
+
+    # FIRST LINK
+    if data["step"] == "first":
+
+        f_msg_id, chat_id = await get_message_id(client, message)
+
+        if not f_msg_id:
+            return await message.reply_text("❌ Invalid first message link")
+
+        data["first"] = f_msg_id
+        data["chat_id"] = chat_id
+        data["step"] = "last"
+
+        return await message.reply_text("📤 Send LAST message link")
+
+    # LAST LINK
+    elif data["step"] == "last":
+
+        l_msg_id, _ = await get_message_id(client, message)
+
+        if not l_msg_id:
+            return await message.reply_text("❌ Invalid last message link")
+
+        f_msg_id = data["first"]
+
+        if l_msg_id <= f_msg_id:
+            return await message.reply_text(
+                "❌ Last message must be greater than first"
+            )
+
+        # ENCODE
+        string = f"get-{f_msg_id}-{l_msg_id}"
+
+        base64_string = base64.urlsafe_b64encode(
+            string.encode()
+        ).decode().strip("=")
+
+        bot_username = (await client.get_me()).username
+
+        link = f"https://t.me/{bot_username}?start={base64_string}"
+
+        await message.reply_text(
+            f"✅ Batch Generated\n\n`{link}`",
+            reply_markup=InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton(
+                        "📫 Share",
+                        url=f"https://telegram.me/share/url?url={link}"
+                    )
+                ]
+            ])
+        )
+
+        del BATCH_USERS[user_id]
+
 # START + LINK HANDLER
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
@@ -228,41 +318,6 @@ class AskMixin:
             return await asyncio.wait_for(future, timeout)
         except:
             return None
-
-
-#batch
-import base64 
-@app.on_message(filters.command("batch") & filters.private)
-async def batch(client, message):
-
-    admin = await is_admin(message.from_user.id)
-
-    if not admin and message.from_user.id != OWNER_ID:
-        return await message.reply("❌ Not allowed")
-
-    await message.reply("📥 Send FIRST message link")
-    first = await client.listen(message.chat.id)
-
-    await message.reply("📤 Send LAST message link")
-    last = await client.listen(message.chat.id)
-
-    f_msg_id, _ = get_message_id(client, first)
-    l_msg_id, _ = get_message_id(client, last)
-
-    if not f_msg_id or not l_msg_id:
-        return await message.reply("❌ Invalid links")
-
-    if l_msg_id <= f_msg_id:
-        return await message.reply("❌ Invalid range")
-
-    import base64
-    data = f"{f_msg_id}-{l_msg_id}"
-    encoded = base64.urlsafe_b64encode(data.encode()).decode().strip("=")
-
-    bot = (await client.get_me()).username
-    link = f"https://t.me/{bot}?start={encoded}"
-
-    await message.reply(f"✅ Batch Link:\n\n`{link}`")
     
 # STATS
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
