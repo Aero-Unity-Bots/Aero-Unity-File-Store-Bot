@@ -21,6 +21,7 @@ from database import (
 from keep_alive import keep_alive
 import asyncio
 import time
+import base64
 
 START_TIME = time.time()
 BOT_VERSION = "v3.0"
@@ -211,16 +212,24 @@ async def save_media(client, message: Message):
 # helper function 
 async def get_message_id(client, message: Message):
     try:
+        if not message.text:
+            return None, None
+
         link = message.text.strip()
 
-        # t.me/c/xxxxx/123 format support
-        if "/c/" in link:
+        if "t.me/c/" in link:
             parts = link.split("/")
             chat_id = int("-100" + parts[-2])
             msg_id = int(parts[-1])
             return msg_id, chat_id
 
+        elif "t.me/" in link:
+            parts = link.split("/")
+            msg_id = int(parts[-1])
+            return msg_id, None
+
         return None, None
+
     except:
         return None, None
         
@@ -229,6 +238,7 @@ async def get_message_id(client, message: Message):
 async def nbatch(client, message: Message):
 
     admin = await is_admin(message.from_user.id)
+
     if not admin and message.from_user.id != OWNER_ID:
         return await message.reply_text("❌ Not allowed")
 
@@ -273,9 +283,8 @@ async def nbatch(client, message: Message):
         return await last_message.reply_text("❌ Last message must be greater than first")
 
     # ================= GENERATE BATCH LINK =================
-    string = f"get-{f_msg_id * abs(source_channel_id)}-{l_msg_id * abs(source_channel_id)}"
-
-    base64_string = string.encode("utf-8").hex()  # simple encoding fallback
+    string = f"get-{f_msg_id}-{l_msg_id}"
+    base64_string = base64.urlsafe_b64encode(string.encode()).decode().strip("=")
 
     bot_username = (await client.get_me()).username
     link = f"https://t.me/{bot_username}?start={base64_string}"
