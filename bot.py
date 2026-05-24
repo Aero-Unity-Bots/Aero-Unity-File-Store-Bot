@@ -36,18 +36,18 @@ app = Client(
 import re
 import base64
 
-web = Flask('')
+web = Flask(__name__)
 
-@web.route('/')
+@web.route("/")
 def home():
-    return "Bot Working!"
+    return "Bot is alive"
 
-def run():
-    web.run(host='0.0.0.0', port=10000)
+def run_web():
+    web.run(host="0.0.0.0", port=10000)
 
 def keep_alive():
-    t = Thread(target=run)
-    t.start()
+    server = Thread(target=run_web)
+    server.start()
 
 # helper function
 async def get_message_id(client, message: Message):
@@ -763,8 +763,9 @@ async def refresh_stats(client, query):
     await query.answer("Sᴛᴀᴛs Uᴘᴅᴀᴛᴇᴅ 🔄")   
     
 #RUN
-keep_alive()
-app.run()
+if __name__ == "__main__":
+    keep_alive()
+    app.run()
 
 #don't remove credits 
 #Owner @Mr_Mohammed_29 
