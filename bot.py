@@ -217,7 +217,6 @@ async def start(client, message: Message):
              parse_mode=ParseMode.MARKDOWN
          )
         # ================= BATCH LINK =================
-
         try:
 
             decoded = base64.urlsafe_b64decode(
@@ -352,6 +351,10 @@ async def start(client, message: Message):
                     await warn.delete()
                 except:
                     pass
+                    
+                return
+
+               
 
     # ================= SINGLE FILE =================
 
