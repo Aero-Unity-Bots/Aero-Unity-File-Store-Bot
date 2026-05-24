@@ -1,9 +1,3 @@
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from config import *
@@ -24,14 +18,7 @@ from database import (
     add_admin_db, remove_admin_db, is_admin, get_all_admins
 )
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 from keep_alive import keep_alive
-from threading import Thread
 import asyncio
 import time
 
@@ -45,164 +32,10 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-import re
-import base64
-
-# helper function
-async def get_message_id(client, message: Message):
-    try:
-        if not message.text:
-            return None, None
-
-        link = message.text.strip()
-
-        # private channel
-        if "/c/" in link:
-            parts = link.split("/")
-            chat_id = int("-100" + parts[-2])
-            msg_id = int(parts[-1])
-            return msg_id, chat_id
-
-        # public channel
-        match = re.search(r"t\.me/([^/]+)/(\d+)", link)
-
-        if match:
-            username = match.group(1)
-            msg_id = int(match.group(2))
-
-            chat = await client.get_chat(username)
-
-            return msg_id, chat.id
-
-        return None, None
-
-    except:
-        return None, None
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
-#batch
-
-BATCH_USERS = {}
-
-#Only Owner + Admin Can Generate Batch Links
-# ================= BATCH COMMAND =================
-
-@app.on_message(filters.private & filters.command("batch"))
-async def batch(client, message: Message):
-
-    user_id = message.from_user.id
-
-    # ONLY OWNER + ADMINS
-    if user_id != OWNER_ID and not await is_admin(user_id):
-        return await message.reply_text(
-            "ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..."
-        )
-
-    BATCH_USERS[user_id] = {
-        "step": "first"
-    }
-
-    await message.reply_text(
-        "Gɪᴠᴇ Mᴇ Bᴀᴛᴄʜ Fɪʀsᴛ Mᴇssᴀɢᴇ 𝗟𝗶𝗻𝗸 ғʀᴏᴍ ʏᴏᴜʀ 𝗗𝗕 𝗖𝗵𝗮𝗻𝗻𝗲𝗹"
-    )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-# ================= HANDLE BATCH REPLIES =================
-
-@app.on_message(filters.private & filters.text & ~filters.command([
-    "start",
-    "stats",
-    "broadcast",
-    "batch",
-    "addadmin",
-    "removeadmin",
-    "adminlist"
-]))
-
-async def handle_batch(client, message: Message):
-
-    user_id = message.from_user.id
-
-    if user_id not in BATCH_USERS:
-        return
-
-    data = BATCH_USERS[user_id]
-
-    # FIRST LINK
-    if data["step"] == "first":
-
-        f_msg_id, chat_id = await get_message_id(client, message)
-
-        if not f_msg_id:
-            return await message.reply_text("‼️ Iɴᴠᴀʟɪᴅ Lᴀsᴛ Mᴇssᴀɢᴇ Lɪɴᴋ")
-
-        data["first"] = f_msg_id
-        data["chat_id"] = chat_id
-        data["step"] = "last"
-
-        return await message.reply_text("Gɪᴠᴇ Mᴇ Bᴀᴛᴄʜ Lᴀsᴛ Mᴇssᴀɢᴇ 𝗟𝗶𝗻𝗸 ғʀᴏᴍ ʏᴏᴜʀ 𝗗𝗕 𝗖𝗵𝗮𝗻𝗻𝗲𝗹")
-
-    # LAST LINK
-    elif data["step"] == "last":
-
-        l_msg_id, _ = await get_message_id(client, message)
-
-        if not l_msg_id:
-            return await message.reply_text("‼️ Iɴᴠᴀʟɪᴅ Lᴀsᴛ Mᴇssᴀɢᴇ Lɪɴᴋ")
-
-        f_msg_id = data["first"]
-
-        if l_msg_id <= f_msg_id:
-            return await message.reply_text(
-                "‼️ Lᴀsᴛ ᴍᴇssᴀɢᴇ ᴍᴜsᴛ ʙᴇ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ ғɪʀsᴛ"
-            )
-
-        # ENCODE
-        string = f"get-{chat_id}-{f_msg_id}-{l_msg_id}"
-
-        base64_string = base64.urlsafe_b64encode(
-            string.encode()
-        ).decode().strip("=")
-
-        bot_username = (await client.get_me()).username
-
-        link = f"https://t.me/{bot_username}?start={base64_string}"
-
-        await message.reply_text(
-            f"✅ ʙᴀᴛᴄʜ ʟɪɴᴋs ɢᴇɴᴇʀᴀᴛᴇᴅ\n\n`{link}`",
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton(
-                        "🔗 sʜᴀʀᴇ ʟɪɴᴋ",
-                        url=f"https://telegram.me/share/url?url={link}"
-                    )
-                ]
-            ])
-        )
-
-        del BATCH_USERS[user_id]
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 # START + LINK HANDLER
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
-    
     user_id = message.from_user.id
-    
     await add_user(message.from_user.id)
 
     # START ANIMATION
@@ -219,300 +52,110 @@ async def start(client, message: Message):
     await message.reply_sticker("CAACAgUAAxkBAAEXmw5plIsM5lyaJfj5NwNp13QSrbW9NQACnBsAAlztqVYRMk2x1suA_B4E")
 
     if len(message.command) > 1:
+        file_unique_id = message.command[1]
+        data = await get_file(file_unique_id)
 
-        param = message.command[1]
+        if not data:
+            return await message.reply_text("🔎 Fɪʟᴇ Is Nᴏᴛ Fᴏᴜɴᴅ, Cᴏɴᴛᴀᴄᴛ Tᴏ Oᴡɴᴇʀ.")
 
-    else:
-        
-         photo = random.choice(IMAGES)
+        original_caption = data.get("caption", "")
+        caption = (
+    f"**{original_caption}**\n\n"
+    f"**›› Cʜᴀɴɴᴇʟ :** [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
+)
 
-         return await message.reply_photo(
-             photo=photo,
-             caption=(
-                 "𝗛𝗲𝗹𝗹𝗼 ♡,\n\n"
-                 "›› 𝗜 𝗰𝗮𝗻 𝘀𝘁𝗼𝗿𝗲 𝗽𝗿𝗶𝘃𝗮𝘁𝗲 𝗳𝗶𝗹𝗲𝘀 𝗶𝗻 𝗦𝗽𝗲𝗰𝗶𝗳𝗶𝗲𝗱 𝗖𝗵𝗮𝗻𝗻𝗲𝗹 𝗮𝗻𝗱 𝗼𝘁𝗵𝗲𝗿 𝘂𝘀𝗲𝗿𝘀 𝗰𝗮𝗻 𝗮𝗰𝗰𝘀𝘀 𝗶𝘁 ғʀᴏᴍ sᴘᴇᴄɪᴀʟ ʟɪɴᴋ."
-             ),
-             reply_markup=InlineKeyboardMarkup(
-                 [
-                    [
-                         InlineKeyboardButton(
-                             "ᴜᴘᴅᴀᴛᴇs",
-                              url="https://t.me/Anime_UpdatesAU"
-                         ),
-                         InlineKeyboardButton(
-                             "ᴀʙᴏᴜᴛ",
-                             callback_data="about"
-                         )
-                    ],
-                    [
-                         InlineKeyboardButton(
-                             "ᴏᴡɴᴇʀ",
-                             url="https://t.me/+ssaZDrj3Wr4wNzI1"
-                         )
-                    ]
+        buttons = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU")]]
+        )
+
+        if data.get("file_type") == "video":
+            sent = await message.reply_video(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                thumb=data.get("thumb") if data.get("thumb") else None,
+                supports_streaming=True,
+                parse_mode=ParseMode.MARKDOWN
+        ) 
+
+        elif data.get("file_type") == "audio":
+            sent = await message.reply_audio(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
+        )
+
+        elif data.get("file_type") == "document":
+            sent = await message.reply_document(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
+        )
+
+        elif data.get("file_type") == "sticker":
+            sent = await message.reply_sticker(
+                data["file_id"]
+        )
+
+        elif data.get("file_type") == "animation":  # GIF
+            sent = await message.reply_animation(
+                data["file_id"],
+                caption=caption,
+                reply_markup=buttons,
+                parse_mode=ParseMode.MARKDOWN
+        )
+
+        else:
+            return await message.reply_text("‼️ Unsupported format")
+
+        warn = await message.reply_text(
+    " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
+    " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
+    " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
+    " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ.",
+    parse_mode=ParseMode.MARKDOWN
+        )
+
+        # AFTER FILE ANIMATION
+        m2 = await message.reply_text("ᴍᴏɴᴋᴇʏ ᴅ ʟᴜғғʏ\nɢᴇᴀʀ 𝟻. . .")
+        await asyncio.sleep(0.4)
+        await m2.edit_text("sᴜɴ ɢᴏᴅ ɴɪᴋᴀ!...")
+        await asyncio.sleep(0.5)
+        await m2.delete()
+
+        await asyncio.sleep(300)
+
+        try:
+           await sent.delete()
+           await warn.delete()
+        except:
+            pass
+        return
+
+    # START MESSAGE WITH BUTTONS
+    photo = random.choice(IMAGES)
+
+    await message.reply_photo(
+        photo=photo,
+        caption=(
+            "𝗛𝗲𝗹𝗹𝗼 ♡,\n\n"
+            "›› 𝗜 𝗰𝗮𝗻 𝘀𝘁𝗼𝗿𝗲 𝗽𝗿𝗶𝘃𝗮𝘁𝗲 𝗳𝗶𝗹𝗲𝘀 𝗶𝗻 𝗦𝗽𝗲𝗰𝗶𝗳𝗶𝗲𝗱 𝗖𝗵𝗮𝗻𝗻𝗲𝗹 𝗮𝗻𝗱 𝗼𝘁𝗵𝗲𝗿 𝘂𝘀𝗲𝗿𝘀 𝗰𝗮𝗻 𝗮𝗰𝗰𝘀𝘀 𝗶𝘁 𝗳𝗿𝗼𝗺 𝘀𝗽𝗲𝗰𝗶𝗮𝗹 𝗹𝗶𝗻𝗸."
+        ),
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU"),
+                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about")
+                ],
+                [
+                    InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/+ssaZDrj3Wr4wNzI1")
                 ]
-             ),
-             parse_mode=ParseMode.MARKDOWN
-         )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-    
-    # ================= BATCH LINK =================
-    # ================= BATCH LINK =================
-    try:
-        decoded = base64.urlsafe_b64decode(
-            param + "=" * (-len(param) % 4)
-        ).decode("utf-8")
-
-    except Exception as e:
-        print(e)
-        return await message.reply_text("‼️ Invalid or expired link")
-
-    if decoded.startswith("get-"):
-
-        _, chat_id, first_id, last_id = decoded.split("-")
-
-        chat_id = int(chat_id)
-        first_id = int(first_id)
-        last_id = int(last_id)
-
-        x = await message.reply_text("🔗 ғɪʟᴇs ʟɪɴᴋs ɢᴇɴᴇʀᴀᴛᴇᴅ...")
-
-        await asyncio.sleep(0.5)
-        await x.edit_text("✨️ ғɪʟᴇs ʟᴏᴀᴅɪɴɢ...")
-        await asyncio.sleep(0.5)
-        await x.edit_text("⏳️ ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...")
-        await asyncio.sleep(0.5)
-        await x.delete()
-  
-        sent_msgs = []
-  
-        for msg_id in range(first_id, last_id + 1):
-
-            try:
-
-                msg = await client.get_messages(chat_id, msg_id)
-
-                original_caption = msg.caption if msg.caption else ""
-
-                caption = (
-                    f"**{original_caption}**\n\n"
-                    f"**›› Cʜᴀɴɴᴇʟ :** "
-                    f"[ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
-                )
-
-                buttons = InlineKeyboardMarkup(
-                    [[
-                        InlineKeyboardButton(
-                            "ᴜᴘᴅᴀᴛᴇs",
-                             url="https://t.me/Anime_UpdatesAU"
-                        )
-                    ]]
-                )
-
-                if msg.video:
- 
-                    sent = await message.reply_video(
-                       msg.video.file_id,
-                       caption=caption,
-                       reply_markup=buttons,
-                       supports_streaming=True,
-                       parse_mode=ParseMode.MARKDOWN
-                    )
- 
-                    sent_msgs.append(sent)
-
-                elif msg.document:
-
-                    sent = await message.reply_document(
-                       msg.document.file_id,
-                       caption=caption,
-                       reply_markup=buttons,
-                       parse_mode=ParseMode.MARKDOWN
-                    )
-
-                    sent_msgs.append(sent)
-  
-                elif msg.audio:
-
-                    sent = await message.reply_audio(
-                       msg.audio.file_id,
-                       caption=caption,
-                       reply_markup=buttons,
-                       parse_mode=ParseMode.MARKDOWN
-                    )
-
-                    sent_msgs.append(sent)
-
-                elif msg.animation:
-
-                    sent = await message.reply_animation(
-                       msg.animation.file_id,
-                       caption=caption,
-                       reply_markup=buttons,
-                       parse_mode=ParseMode.MARKDOWN
-                    )
-
-                sent_msgs.append(sent)
-
-            elif msg.sticker:
-
-                sent = await message.reply_sticker(
-                    msg.sticker.file_id
-                )
-
-                sent_msgs.append(sent)
-
-            await asyncio.sleep(0.3)
- 
-            except Exception as e:
-                print(e)
-
-            warn = await message.reply_text(
-           " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-           " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-           " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
-           " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ."
-           )
-
-       await asyncio.sleep(300)
-  
-       for msg in sent_msgs:
-           try:
-               await msg.delete()
-           except:
-               pass
-
-           try:
-              await warn.delete()
-           except:
-               pass
-
-          return
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-    
-    # ================= SINGLE FILE =================
-
-    file_unique_id = param
-
-    data = await get_file(file_unique_id)
-
-    if not data:
-        return await message.reply_text(
-            "🔎 Fɪʟᴇ Is Nᴏᴛ Fᴏᴜɴᴅ, Cᴏɴᴛᴀᴄᴛ Tᴏ Oᴡɴᴇʀ."
-        )
-
-    original_caption = data.get("caption", "")
-
-    caption = (
-        f"**{original_caption}**\n\n"
-        f"**›› Cʜᴀɴɴᴇʟ :** "
-        f"[ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
+            ]
+        ),
+        parse_mode=ParseMode.MARKDOWN
     )
-
-    buttons = InlineKeyboardMarkup(
-        [[
-            InlineKeyboardButton(
-                "ᴜᴘᴅᴀᴛᴇs",
-                url="https://t.me/Anime_UpdatesAU"
-            )
-        ]]
-    )
-
-    if data.get("file_type") == "video":
-
-        sent = await message.reply_video(
-            data["file_id"],
-            caption=caption,
-            reply_markup=buttons,
-            thumb=data.get("thumb")
-            if data.get("thumb") else None,
-            supports_streaming=True,
-            parse_mode=ParseMode.MARKDOWN
-        )
-
-    elif data.get("file_type") == "audio":
-
-        sent = await message.reply_audio(
-            data["file_id"],
-            caption=caption,
-            reply_markup=buttons,
-            parse_mode=ParseMode.MARKDOWN
-        )
-
-    elif data.get("file_type") == "document":
-
-        sent = await message.reply_document(
-            data["file_id"],
-            caption=caption,
-            reply_markup=buttons,
-            parse_mode=ParseMode.MARKDOWN
-        )
-
-    elif data.get("file_type") == "sticker":
-
-        sent = await message.reply_sticker(
-            data["file_id"]
-        )
-
-    elif data.get("file_type") == "animation":
-
-        sent = await message.reply_animation(
-            data["file_id"],
-            caption=caption,
-            reply_markup=buttons,
-            parse_mode=ParseMode.MARKDOWN
-        )
-
-    else:
-        return await message.reply_text(
-            "‼️ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ғᴏʀᴍᴀᴛ"
-        )
-
-    warn = await message.reply_text(
-        " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-        " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-        " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
-        " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ."
-    )
-
-    # AFTER FILE ANIMATION
-    m2 = await message.reply_text(
-        "ᴍᴏɴᴋᴇʏ ᴅ ʟᴜғғʏ\nɢᴇᴀʀ 𝟻..."
-    )
-
-    await asyncio.sleep(0.4)
-
-    await m2.edit_text(
-        "sᴜɴ ɢᴏᴅ ɴɪᴋᴀ!..."
-    )
-
-    await asyncio.sleep(0.5)
-
-    await m2.delete()
-
-    await asyncio.sleep(300)
-
-    try:
-        await sent.delete()
-        await warn.delete()
-
-    except:
-        pass
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
 
 # ONLY OWNER + ADMIN CAN UPLOAD 
 @app.on_message(
@@ -524,7 +167,7 @@ async def save_media(client, message: Message):
     # Allow only owner + admin
     if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
         return await message.reply_text("ғᴜᴄᴋ ʏᴏᴜ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
-        
+
     original_caption = message.caption if message.caption else ""
 
     # Detect file type
@@ -594,13 +237,6 @@ async def stats(client, message: Message):
         f"🧾 Vᴇʀsɪᴏɴ: {BOT_VERSION}",
         reply_markup=keyboard
     )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 # BROADCAST
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast(client, message: Message):
@@ -632,7 +268,7 @@ async def broadcast(client, message: Message):
         f"◇ Sᴜᴄᴄᴇssғᴜʟ: {sent}\n"
         f"◇ Uɴsᴜᴄᴄᴇssғᴜʟ: {failed}"
     )
-    
+
 @app.on_message(
     filters.private &
     ~filters.service &
@@ -641,12 +277,6 @@ async def broadcast(client, message: Message):
 async def auto_add_user(client, message: Message):
     if message.from_user:
         await add_user(message.from_user.id)
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
 
 # ADD ADMIN 
 @app.on_message(filters.command("addadmin") & filters.private)
@@ -671,7 +301,7 @@ async def add_admin(client, message: Message):
     await add_admin_db(user_id, name, username)
 
     await message.reply_text(f"✅️ ᴀᴅᴍɪɴ ɪs ᴀᴅᴅᴇᴅ : {user_id}")
-    
+
     # Send message to that user
     try:
         await client.send_message(
@@ -680,12 +310,6 @@ async def add_admin(client, message: Message):
         )
     except Exception as e:
         print(f"Fᴀɪʟᴇᴅ Tᴏ Nᴏᴛɪғʏ Aᴅᴍɪɴ : {e}")
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
 
 # REMOVE ADMIN 
 @app.on_message(filters.command("removeadmin") & filters.private)
@@ -705,12 +329,6 @@ async def remove_admin(client, message: Message):
     await remove_admin_db(user_id)
 
     await message.reply_text(f"✅️ ᴀᴅᴍɪɴ ɪs ʀᴇᴍᴏᴠᴇᴅ : {user_id}")
-
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
 
 #ADMIN LIST
 @app.on_message(filters.command("adminlist") & filters.private)
@@ -739,12 +357,6 @@ async def admin_list(client, message: Message):
 
     await message.reply_text(text)
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 # ABOUT HANDLER
 @app.on_callback_query(filters.regex("about"))
 async def about_callback(client, query):
@@ -755,7 +367,7 @@ async def about_callback(client, query):
         "‣ ʟɪʙʀᴀʀʏ : [ᴘʏʀᴏɢʀᴀᴍ 𝟸.𝟶](https://pypi.org/project/Pyrogram/)\n"
         "‣ ʟᴀɴɢᴜᴀɢᴇ : [ᴘʏᴛʜᴏɴ 𝟹](https://www.python.org/downloads/)\n"
         "‣ ᴅᴀᴛᴀ ʙᴀsᴇ : [ᴍᴏɴɢᴏ ᴅʙ](https://www.mongodb.com/)\n"
-        "‣ ʙᴏᴛ sᴇʀᴠᴇʀ : [Bᴏᴛs Sᴇʀᴠᴇʀ](https://t.me/Anime_UpdatesAU)\n"
+        "‣ ʙᴏᴛ sᴇʀᴠᴇʀ : [Bᴏᴛs Sᴇʀᴠᴇʀ](https://t.me/BotsServerDead)\n"
         "‣ ᴜᴘᴅᴀᴛᴇs : [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)\n"
         "‣ ʙᴜɪʟᴅ sᴛᴀᴛᴜs : ᴠ3.𝟶 [sᴛᴀʙʟᴇ](https://t.me/BotsServerDead)",
         reply_markup=InlineKeyboardMarkup(
@@ -764,11 +376,6 @@ async def about_callback(client, query):
         parse_mode=ParseMode.MARKDOWN
     )
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
 
 # HOME HANDLER
 @app.on_callback_query(filters.regex("home"))
@@ -798,12 +405,6 @@ async def home_callback(client, query):
         )
     )
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
 # REFRESH STATS 
 @app.on_callback_query(filters.regex("refresh_stats"))
 async def refresh_stats(client, query):
@@ -823,7 +424,7 @@ async def refresh_stats(client, query):
 
     process = psutil.Process()
     memory = process.memory_info().rss / (1024 * 1024)
-    
+
     await query.message.edit_text(
         f"📊 **𝗕𝗼𝘁 𝗦𝘁𝗮𝘁𝘂𝘀**\n\n"
         f"👥 Usᴇʀs: {total}\n"
@@ -836,23 +437,9 @@ async def refresh_stats(client, query):
 
     await query.answer("Sᴛᴀᴛs Uᴘᴅᴀᴛᴇᴅ 🔄")   
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
-
-# RUN
-from threading import Thread
-
-Thread(target=keep_alive).start()
-
-print("Bot Started Successfully...")
-
+#RUN
+keep_alive()
 app.run()
 
-# ------------------------- #
-# Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
-# ------------------------- #
+#don't remove credits 
+#Owner @Mr_Mohammed_29 
