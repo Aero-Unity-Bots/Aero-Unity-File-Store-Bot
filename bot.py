@@ -18,7 +18,8 @@ from database import (
     add_admin_db, remove_admin_db, is_admin, get_all_admins
 )
 
-from keep_alive import keep_alive
+from flask import Flask
+from threading import Thread
 import asyncio
 import time
 
@@ -34,6 +35,19 @@ app = Client(
 
 import re
 import base64
+
+web = Flask('')
+
+@web.route('/')
+def home():
+    return "Bot Working!"
+
+def run():
+    web.run(host='0.0.0.0', port=10000)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
 
 # helper function
 async def get_message_id(client, message: Message):
