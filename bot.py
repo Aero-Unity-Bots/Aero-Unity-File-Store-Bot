@@ -18,7 +18,7 @@ from database import (
     add_admin_db, remove_admin_db, is_admin, get_all_admins
 )
 
-from flask import Flask
+from keep_alive import keep_alive
 from threading import Thread
 import asyncio
 import time
