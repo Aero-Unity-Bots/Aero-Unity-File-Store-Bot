@@ -17,7 +17,20 @@
   </a>
 </p>
 
-----
+## 🚀 Project Status
+
+![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-yellow.svg)
+![Platform](https://img.shields.io/badge/Platform-Telegram-blue)
+![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen)
+
+# 🤖 File Store Bot
+
+![Repo Size](https://img.shields.io/github/repo-size/Coder-yt/filelinkbot)
+![Stars](https://img.shields.io/github/stars/Coder-yt/filelinkbot?style=social)
+![Forks](https://img.shields.io/github/forks/Coder-yt/filelinkbot?style=social)
+![Last Commit](https://img.shields.io/github/last-commit/Coder-yt/filelinkbot)
 
 ## ⚙️ Configuration Variables
 
@@ -30,20 +43,6 @@
 | OWNER_ID       | Telegram user ID of bot owner                | 987654321                    |
 | BOT_USERNAME   | Bot username (without @)                     | AU_FILESTORE_BOT             |
 | CHANNEL_ID     | Channel ID where bot is connected (Database) | -1001234567890               |
-
-
-
-<details>
-<summary><h3>
-- <b> ᴅᴇᴘʟᴏʏᴍᴇɴᴛ ᴍᴇᴛʜᴏᴅs </b>
-</h3></summary>
-<h3 align="center">
-    ─「 ᴅᴇᴩʟᴏʏ ᴏɴ ʀᴇɴᴅᴇʀ 」─
-</h3>
-<p align="center"><a href="https://render.com/deploy?repo=https://github.com/Coder-yt/filelinkbot">
-<img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render">
-</a></p>
-</details>
 
 ## 🤖 Bot Commands
 
@@ -64,49 +63,79 @@ removeadmin - Remove admin using user id (Owner only) Example: /removeadmin 1234
 
 **NOTE**
 
-    Don't Add Values In Config.py 
+```
+    Don't Add Values In Config.py , add all Values in Render Only
 
------
------
-    After Deploying On Render, Copy these link example like https://filelinkbot1.onrender.com
-    Now Go To Chrome Search UptimeRobot and open UptimeRobot, click on new and paste in there link https://filelinkbot1.onrender.com
-    keep 5 min check time 
-----
-**Now Upgraded to V3.0** 
-----
-  **Bot Commands**
+```
 
-  /start - start the bot, direct send the file to bot, bot will give you the link
-           [**Only Owner + Admin Can Send The Files**]
-  
-  /stats - check users abd refresh stats [Owner Only]
-  
-  /broadcast - broadcast to the users [Owner Only]
+<details><summary>How To Keep Your Bot Alive</summary>
+<br>
+<b>Use these settings while deploying on Render:</b>
+<br><br>
+• Runtime: <code>Docker</code>
+<br><br>
+• Build Command:
+<code>pip install -r requirements.txt</code>
+<br><br>
+• Start Command:
+<code>python main.py</code>
+<br><br>
+<b>🌐 Keep Bot Alive 24/7 Using UptimeRobot</b>
+<br><br>
+Go to:
+https://uptimerobot.com/
+<br><br>
+Click:
+<b>Add New Monitor</b>
+<br><br>
+Use these settings 👇
+<br><br>
+<img src="https://telegra.ph/file/a79a156e44f43c9833b50.jpg">
+<br><br>
+<b>Type:</b>
+<code>HTTP(s)</code>
+<br><br>
+<b>URL:</b>
+<code>https://your-render-app.onrender.com</code>
+<br><br>
+<b>Monitoring Interval:</b>
+<code>5 Minutes</code>
+<br><br>
+After adding monitor click:
+<b>Create Monitor</b>
+<br><br>
+✅ Your bot will stay alive 24/7.
+</details>
 
-  /addmin - Add admin with user id [ex: /addadmin 1234566] [Owner Only]
+<details>
+<summary><h3>
+- <b> ᴅᴇᴘʟᴏʏᴍᴇɴᴛ ᴍᴇᴛʜᴏᴅs </b>
+</h3></summary>
+<h3 align="center">
+    ─「 ᴅᴇᴩʟᴏʏ ᴏɴ ʀᴇɴᴅᴇʀ 」─
+</h3>
+<p align="center"><a href="https://render.com/deploy?repo=https://github.com/Coder-yt/filelinkbot">
+<img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render">
+</a></p>
+</details>
 
-  /removeadmin - Remove Admin with user id [ex: /removeadmin 1234566] [Owner Only]
-  
-----
 
-----
-**Warning**
-
-~ Don't Change The Code, and dont import the code.
-
-~ You Can Add your channels link,start caption,about,etc.
-
-~ if you change the code you will **banned**
-
-~ Give Star , Just Fork it 
-
-----
-
-----
   ***Contact Owner***
   
    If you got any error while deploying Contact to Owner 
      
-Developer: <a href="https://t.me/Mr_Mohammed_29"><b>ᴍᴏʜᴀᴍᴍᴇᴅ</b></a>  
+- Developer: <a href="https://t.me/Mr_Mohammed_29"><b>ᴍᴏʜᴀᴍᴍᴇᴅ</b></a>  
+- Framework: <a href="https://docs.pyrogram.org/"><b>ᴘʏʀᴏɢʀᴀᴍ</b></a>  
 
-----
+---
+
+---
+
+## Fork and ⭐ this repo 
+<p align="center">
+  If you like this bot, give it a ⭐ on GitHub to support the project!  
+  <a href="https://github.com/Coder-yt/filelinkbot" target="_blank">
+  </a>
+</p>
+
+ ›› **ʏᴏᴜ ᴀʀᴇ ꜰʀᴇᴇ ᴛᴏ ᴜsᴇ, ᴍᴏᴅɪꜰʏ, ᴀɴᴅ sʜᴀʀᴇ ɪᴛ — ʙᴜᴛ ʏᴏᴜ ᴍᴜsᴛ ᴀʟsᴏ ɢɪᴠᴇ ᴄʀᴇᴅɪᴛ**
