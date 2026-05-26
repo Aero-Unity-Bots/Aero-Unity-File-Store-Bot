@@ -289,29 +289,31 @@ async def start(client, message: Message):
                     except Exception as e:
                         print(e)
                         
-                    await wait.delete()
+                await wait.delete()
 
-                    warn = await message.reply_text(
-                        " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-                        " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-                        " ›› Sᴏ ᴘʟᴇᴀsᴇ sᴀᴠᴇ ᴛʜᴇᴍ.",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
+                warn = await message.reply_text(
+                    " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
+                    " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
+                    " ›› Sᴏ ᴘʟᴇᴀsᴇ sᴀᴠᴇ ᴛʜᴇᴍ.",
+                    parse_mode=ParseMode.MARKDOWN
+                )
 
-                    await asyncio.sleep(300)
+                await asyncio.sleep(300)
 
-                    for x in sent_messages:
-                        try:
-                            await x.delete()
-                        except:
-                            pass
-
+                for x in sent_messages:
                     try:
-                        await warn.delete()
+                        await x.delete()
                     except:
                         pass
 
-                    return
+                try:
+                    await warn.delete()
+                except:
+                    pass
+
+                return
+
+        #-------- Single File -----------#
         
         file_unique_id = message.command[1]
         data = await get_file(file_unique_id)
