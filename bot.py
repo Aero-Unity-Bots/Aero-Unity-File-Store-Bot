@@ -313,6 +313,9 @@ async def start(client, message: Message):
 
                 return
 
+        except Exception as e:
+            print(e)
+
         #-------- Single File -----------#
         
         file_unique_id = message.command[1]
