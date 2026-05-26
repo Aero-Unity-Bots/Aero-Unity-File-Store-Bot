@@ -47,24 +47,14 @@
 
 ## 🤖 Bot Commands
 
-### 📌 User Commands
-
-| Command | Description | Example |
-|--------|-------------|---------|
-| `start` | Start the bot. If owner/admin sends a file, bot generates a link | `/start` |
-
----
-
-### 🔐 Admin / Owner Commands
-
-| Command | Description | Example |
-|--------|-------------|---------|
-| `batch` | Store multiple messages from a channel for link generation | `/batch` |
-| `stats` | Check total users and bot statistics (Owner only) | `/stats` |
-| `broadcast` | Send a message to all users (Owner only) | `/broadcast Hello users!` |
-| `addadmin` | Add a new admin using user ID | `/addadmin 123456789` |
-| `removeadmin` | Remove an admin using user ID | `/removeadmin 123456789` |
-
+```
+start - Start the bot and generate file link (Owner/Admin only for file send)
+batch - Store multiple messages from channel (Owner/Admin only)
+stats - Check bot users and statistics (Owner only)
+broadcast - Send message to all users (Owner only)
+addadmin - Add admin using user id (Owner only) Example: /addadmin 123456789
+removeadmin - Remove admin using user id (Owner only) Example: /removeadmin 123456789
+```
 ---
 
 ### ⚠️ Note
