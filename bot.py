@@ -196,8 +196,6 @@ async def start(client, message: Message):
     await asyncio.sleep(0.5)
     await m.delete()
 
-    await message.reply_sticker("CAACAgIAAxkBAAICR2oVJiIXaZ5rq3gCNOT-ilnKHtPgAAJkOQACmcQYSGuKRcCIf8hnHgQ")
-
     if len(message.command) > 1:
         param = message.command[1]
 
