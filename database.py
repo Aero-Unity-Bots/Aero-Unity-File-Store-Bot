@@ -19,6 +19,7 @@ db = client.filebot
 files = db.files
 users = db.users
 admins = db["admins"]
+forcesubs = db["forcesubs"]
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -127,9 +128,85 @@ async def remove_admin_db(user_id):
 
 async def is_admin(user_id):
     return await admins.find_one({"user_id": int(user_id)}) is not None
-
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Ask Doubt @AU_Bot_Discussion 
 # Owner @Mr_Mohammed_29 
+# ------------------------- #
+
+async def add_force_sub(channel):
+
+    channel = channel.replace("@", "").lower()
+
+    await forcesubs.update_one(
+        {"channel": channel},
+        {"$set": {"channel": channel}},
+        upsert=True
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def remove_force_sub(channel):
+
+    channel = channel.replace("@", "").lower()
+
+    await forcesubs.delete_one(
+        {"channel": channel}
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_force_subs():
+
+    channels = []
+
+    async for ch in forcesubs.find({}, {"_id": 0}):
+        channels.append(ch["channel"])
+
+    return channels
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+verify_db = db.verify_cache
+
+
+async def save_verify(user_id, param):
+    await verify_db.update_one(
+        {"user_id": user_id},
+        {"$set": {"param": param}},
+        upsert=True
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_verify(user_id):
+    data = await verify_db.find_one({"user_id": user_id})
+    if data:
+        return data.get("param")
+    return None
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def delete_verify(user_id):
+    await verify_db.delete_one({"user_id": user_id})
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
 # ------------------------- #
