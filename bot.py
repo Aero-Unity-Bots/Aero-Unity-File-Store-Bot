@@ -123,7 +123,7 @@ async def batch_command(client, message):
     if user_id != OWNER_ID and not await is_admin(user_id):
 
         return await message.reply_text(
-            "ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃."
+            "ғᴜᴄᴋ ʏᴏᴜ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃."
         )
 
     BATCH_USERS[user_id] = {
@@ -147,7 +147,10 @@ async def batch_command(client, message):
         "broadcast",
         "addadmin",
         "removeadmin",
-        "adminlist"
+        "adminlist",
+        "alive",
+        "id",
+        "system"
     ])
 )
 async def handle_batch(client, message):
@@ -515,7 +518,7 @@ async def save_media(client, message: Message):
     link = f"https://t.me/{BOT_USERNAME}?start={file_unique_id}"
 
     await message.reply_text(f"🔗 𝗛𝗲𝗿𝗲 𝗜𝘀 𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸:\n{link}")
-
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -589,7 +592,7 @@ async def broadcast(client, message: Message):
         f"◇ Sᴜᴄᴄᴇssғᴜʟ: {sent}\n"
         f"◇ Uɴsᴜᴄᴄᴇssғᴜʟ: {failed}"
     )
-
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -613,7 +616,7 @@ async def broadcast(client, message: Message):
 async def auto_add_user(client, message):
     if message.from_user:
         await add_user(message.from_user.id)
-
+        
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -651,7 +654,7 @@ async def add_admin(client, message: Message):
         )
     except Exception as e:
         print(f"Fᴀɪʟᴇᴅ Tᴏ Nᴏᴛɪғʏ Aᴅᴍɪɴ : {e}")
-
+        
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -675,7 +678,7 @@ async def remove_admin(client, message: Message):
     await remove_admin_db(user_id)
 
     await message.reply_text(f"✅️ ᴀᴅᴍɪɴ ɪs ʀᴇᴍᴏᴠᴇᴅ : {user_id}")
-
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -702,12 +705,12 @@ async def admin_list(client, message: Message):
 
         text += (
             f"{i}.𝗡𝗮𝗺𝗲: {name}\n"
-            f"𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @{username if username != 'None' else 'no_username'}\n"
-            f"𝗜𝗗: {user_id}\n\n"
+            f"  𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @{username if username != 'None' else 'no_username'}\n"
+            f"  𝗜𝗗: {user_id}\n\n"
         )
 
     await message.reply_text(text)
-
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -718,16 +721,16 @@ async def admin_list(client, message: Message):
 async def about_callback(client, query):
     await query.message.edit_text(
         "⍟───[ MY ᴅᴇᴛᴀɪʟꜱ ]───⍟\n\n"
-        "‣ ᴍʏ ɴᴀᴍᴇ : [ᴀᴜ ʟᴜғғʏ sᴛᴏʀᴇ ʙᴏᴛ](https://t.me/AU_Luffy_Store_bot)\n"
+        "‣ ᴍʏ ɴᴀᴍᴇ : [ᴀᴇʀᴏ ғɪʟᴇ sᴛᴏʀᴇ ʙᴏᴛ](https://t.me/Aero_FileStoreBot)\n"
         "‣ ᴅᴇᴠᴇʟᴏᴘᴇʀ : [ᴍᴏʜᴀᴍᴍᴇᴅ](https://t.me/Mr_Mohammed_29)\n"
         "‣ ʟɪʙʀᴀʀʏ : [ᴘʏʀᴏɢʀᴀᴍ 𝟸.𝟶](https://pypi.org/project/Pyrogram/)\n"
         "‣ ʟᴀɴɢᴜᴀɢᴇ : [ᴘʏᴛʜᴏɴ 𝟹](https://www.python.org/downloads/)\n"
         "‣ ᴅᴀᴛᴀ ʙᴀsᴇ : [ᴍᴏɴɢᴏ ᴅʙ](https://www.mongodb.com/)\n"
         "‣ ʙᴏᴛ sᴇʀᴠᴇʀ : [Bᴏᴛs Sᴇʀᴠᴇʀ](https://render.com)\n"
-        "‣ ᴜᴘᴅᴀᴛᴇs : [ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)\n"
+        "‣ ᴜᴘᴅᴀᴛᴇs : [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Aero_Unity)\n"
         "‣ ʙᴜɪʟᴅ sᴛᴀᴛᴜs : ᴠ3.𝟶 [sᴛᴀʙʟᴇ](https://t.me/Aero_Unity)",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("• ʜᴏᴍᴇ •", callback_data="home")]]
+            [[InlineKeyboardButton("ʜᴏᴍᴇ", callback_data="home")]]
         ),
         parse_mode=ParseMode.MARKDOWN
     )
