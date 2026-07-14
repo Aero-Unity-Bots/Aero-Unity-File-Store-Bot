@@ -123,7 +123,7 @@ async def batch_command(client, message):
     if user_id != OWNER_ID and not await is_admin(user_id):
 
         return await message.reply_text(
-            "ғᴜᴄᴋ ʏᴏᴜ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃."
+            "ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃."
         )
 
     BATCH_USERS[user_id] = {
@@ -274,11 +274,11 @@ async def start(client, message: Message):
 
                         caption = (
                             f"**{original_caption}**\n\n"
-                            f"**›› Cʜᴀɴɴᴇʟ :** [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
+                            f"**›› ʙʏ :** [ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)"
                         )
 
                         buttons = InlineKeyboardMarkup(
-                            [[InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU")]]
+                            [[InlineKeyboardButton("• ᴜᴘᴅᴀᴛᴇs •", url="https://t.me/Aero_Unity")]]
                         )
 
                         if msg.video:
@@ -362,11 +362,11 @@ async def start(client, message: Message):
         original_caption = data.get("caption", "")
         caption = (
     f"**{original_caption}**\n\n"
-    f"**›› Cʜᴀɴɴᴇʟ :** [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)"
+    f"**›› ʙʏ :** [ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)"
 )
 
         buttons = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU")]]
+            [[InlineKeyboardButton("• ᴜᴘᴅᴀᴛᴇs •", url="https://t.me/Aero_Unity")]]
         )
 
         if data.get("file_type") == "video":
@@ -447,11 +447,11 @@ async def start(client, message: Message):
         reply_markup=InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU"),
-                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about")
+                    InlineKeyboardButton("• ᴜᴘᴅᴀᴛᴇs •", url="https://t.me/Aero_Unity"),
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ •", callback_data="about")
                 ],
                 [
-                    InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/+ssaZDrj3Wr4wNzI1")
+                    InlineKeyboardButton("• ᴏᴡɴᴇʀ •", url="https://t.me/Mr_Mohammed_29")
                 ]
             ]
         ),
@@ -701,9 +701,9 @@ async def admin_list(client, message: Message):
         user_id = admin.get("user_id")
 
         text += (
-            f"{i}. 𝗡𝗮𝗺𝗲: {name}\n"
-            f"   𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @{username if username != 'None' else 'no_username'}\n"
-            f"   𝗜𝗗: {user_id}\n\n"
+            f"{i}.𝗡𝗮𝗺𝗲: {name}\n"
+            f"𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @{username if username != 'None' else 'no_username'}\n"
+            f"𝗜𝗗: {user_id}\n\n"
         )
 
     await message.reply_text(text)
@@ -724,10 +724,10 @@ async def about_callback(client, query):
         "‣ ʟᴀɴɢᴜᴀɢᴇ : [ᴘʏᴛʜᴏɴ 𝟹](https://www.python.org/downloads/)\n"
         "‣ ᴅᴀᴛᴀ ʙᴀsᴇ : [ᴍᴏɴɢᴏ ᴅʙ](https://www.mongodb.com/)\n"
         "‣ ʙᴏᴛ sᴇʀᴠᴇʀ : [Bᴏᴛs Sᴇʀᴠᴇʀ](https://render.com)\n"
-        "‣ ᴜᴘᴅᴀᴛᴇs : [ᴀɴɪᴍᴇ ᴜᴘᴅᴀᴛᴇs](https://t.me/Anime_UpdatesAU)\n"
-        "‣ ʙᴜɪʟᴅ sᴛᴀᴛᴜs : ᴠ3.𝟶 [sᴛᴀʙʟᴇ](https://t.me/Anime_UpdatesAU)",
+        "‣ ᴜᴘᴅᴀᴛᴇs : [ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)\n"
+        "‣ ʙᴜɪʟᴅ sᴛᴀᴛᴜs : ᴠ3.𝟶 [sᴛᴀʙʟᴇ](https://t.me/Aero_Unity)",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("ʜᴏᴍᴇ", callback_data="home")]]
+            [[InlineKeyboardButton("• ʜᴏᴍᴇ •", callback_data="home")]]
         ),
         parse_mode=ParseMode.MARKDOWN
     )
@@ -755,11 +755,11 @@ async def home_callback(client, query):
         reply_markup=InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url="https://t.me/Anime_UpdatesAU"),
-                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about")
+                    InlineKeyboardButton("• ᴜᴘᴅᴀᴛᴇs •", url="https://t.me/Aero_Unity"),
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ •", callback_data="about")
                 ],
                 [
-                    InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/+ssaZDrj3Wr4wNzI1")
+                    InlineKeyboardButton("• ᴏᴡɴᴇʀ •", url="https://t.me/Mr_Mohammed_29")
                 ]
             ]
         )
