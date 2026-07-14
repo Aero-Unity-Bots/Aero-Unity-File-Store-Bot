@@ -8,7 +8,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from config import *
 from pyrogram.types import InputMediaPhoto
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatMemberStatus
 from pyrogram.errors import FloodWait
 
 # ------------------------- #
@@ -38,9 +38,28 @@ IMAGES = [
     "https://graph.org/file/27dd5451f160ce28dadd4-8ca0a7d6480451adc8.jpg",
     "https://graph.org/file/0e77ba48a8b7a3b09296f-362372bee0d84fd217.jpg"
 ]
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 from database import (
-    save_file, get_file, add_user, get_all_users, total_users,
-    add_admin_db, remove_admin_db, is_admin, get_all_admins
+    save_file,
+    get_file,
+    add_user,
+    get_all_users,
+    total_users,
+    add_admin_db,
+    remove_admin_db,
+    is_admin,
+    get_all_admins,
+    add_force_sub,
+    remove_force_sub,
+    get_force_subs,
+    save_verify,
+    get_verify,
+    delete_verify,
 )
 
 # ------------------------- #
@@ -148,9 +167,12 @@ async def batch_command(client, message):
         "addadmin",
         "removeadmin",
         "adminlist",
+        "addfsub",
+        "removefsub",
+        "fsublist",
         "alive",
         "id",
-        "system"
+       "system"
     ])
 )
 async def handle_batch(client, message):
@@ -224,12 +246,110 @@ async def handle_batch(client, message):
 
         del BATCH_USERS[user_id]
 
+# ------------------------- #
+# FORCE SUBSCRIBE CHECK
+# ------------------------- #
+
+async def check_force_sub(client, user_id):
+
+    channels = await get_force_subs()
+
+    if not channels:
+        return True, None
+
+    buttons = []
+
+    for channel in channels:
+
+        try:
+            member = await client.get_chat_member(
+                channel,
+                user_id
+            )
+
+            if member.status in [
+                "left",
+                "kicked"
+            ]:
+
+                chat = await client.get_chat(channel)
+
+                buttons.append(
+                    [
+                        InlineKeyboardButton(
+                            f"• {chat.title} •",
+                            url=f"https://t.me/{channel}"
+                        )
+                    ]
+                )
+
+        except:
+
+            try:
+                chat = await client.get_chat(channel)
+                title = chat.title
+            except:
+                title = channel.replace("_", " ").title()
+
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        f"• {title} •",
+                        url=f"https://t.me/{channel}"
+                    )
+                ]
+            )
+
+    if buttons:
+
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    "• ᴛʀʏ ᴀɢᴀɪɴ •",
+                    callback_data="checksub"
+                )
+            ]
+        )
+
+        return False, InlineKeyboardMarkup(buttons)
+
+    return True, None
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 # START + LINK HANDLER
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
 
     user_id = message.from_user.id
-    await add_user(message.from_user.id)
+    await add_user(user_id)
+
+    # Save parameter before Force Subscribe check
+    if len(message.command) > 1:
+        param = message.command[1]
+        await save_verify(user_id, param)
+
+    # ------------------------- #
+    # FORCE SUBSCRIBE CHECK
+    # ------------------------- #
+
+    ok, keyboard = await check_force_sub(
+        client,
+        user_id
+    )
+
+    if not ok:
+        return await message.reply_photo(
+            photo=FORCE_SUB_IMAGE,
+            caption=(
+                "**›› ‼️ ʟᴏᴏᴋs ʟɪᴋᴇ ʏᴏᴜ ʜᴀᴠᴇɴ'ᴛ ᴊᴏɪɴᴇᴅ ᴛᴏ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ʏᴇᴛ, sᴜʙsᴄʀɪʙᴇ ɴᴏᴡ...**\n\n"
+                "• ᴘʀᴇss **ᴛʀʏ ᴀɢᴀɪɴ**."
+            ),
+            reply_markup=keyboard,
+            parse_mode=ParseMode.MARKDOWN
+        )
 
     # START ANIMATION
     m = await message.reply_text("ᴍᴏɴᴋᴇʏ ᴅ ʟᴜғғʏ\nɢᴇᴀʀ 𝟻. . .")
@@ -332,9 +452,9 @@ async def start(client, message: Message):
                 await wait.delete()
 
                 warn = await message.reply_text(
-                    " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-                    " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-                    " ›› Sᴏ ᴘʟᴇᴀsᴇ sᴀᴠᴇ ᴛʜᴇᴍ.",
+                    " **⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...**\n\n"
+                    " **›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.**\n"
+                    " **›› Sᴏ ᴘʟᴇᴀsᴇ sᴀᴠᴇ ᴛʜᴇᴍ.**",
                     parse_mode=ParseMode.MARKDOWN
                 )
 
@@ -414,11 +534,13 @@ async def start(client, message: Message):
         else:
             return await message.reply_text("‼️ Unsupported format")
 
+        await delete_verify(user_id)
+
         warn = await message.reply_text(
-    " ⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...\n\n"
-    " ›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.\n"
-    " ›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.\n\n"
-    " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ 𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿 ᴏʀ 𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿 ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ.",
+    " **⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...**\n\n"
+    " **›› Yᴏᴜʀ ғɪʟᴇs ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ᴡɪᴛʜɪɴ 𝟻 ᴍɪɴᴜᴛᴇs.**\n"
+    " **›› Sᴏ ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴛʜᴇᴍ ᴛᴏ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs.**\n\n"
+    " ›› 𝗡𝗼𝘁𝗲: ᴜsᴇ **𝗩𝗟𝗖 𝗣𝗹𝗮𝘆𝗲𝗿** ᴏʀ **𝗠𝗫 𝗣𝗹𝗮𝘆𝗲𝗿** ғᴏʀ ʙᴇsᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ.",
     parse_mode=ParseMode.MARKDOWN
         )
 
@@ -475,7 +597,7 @@ async def save_media(client, message: Message):
 
     # Allow only owner + admin
     if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
-        return await message.reply_text("ғᴜᴄᴋ ʏᴏᴜ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
+        return await message.reply_text(" ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
 
     original_caption = message.caption if message.caption else ""
 
@@ -578,7 +700,7 @@ async def broadcast(client, message: Message):
         try:
             await msg.copy(chat_id=int(user_id))
             sent += 1
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.05)
 
         except FloodWait as e:
             await asyncio.sleep(e.value)
@@ -608,6 +730,9 @@ async def broadcast(client, message: Message):
         "addadmin",
         "removeadmin",
         "adminlist",
+        "addfsub",
+        "removefsub",
+        "fsublist",
         "alive",
         "id",
         "system"
@@ -710,12 +835,178 @@ async def admin_list(client, message: Message):
         )
 
     await message.reply_text(text)
+
+# ------------------------- #
+# FORCE SUBSCRIBE COMMANDS
+# ------------------------- #
+
+@app.on_message(filters.command("addfsub") & filters.private)
+async def add_fsub(client, message):
+
+    if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
+        return await message.reply_text("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃...")
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "Usᴀɢᴇ: /addfsub @channelusername\nEx: /addfsub @Aero_Unity"
+        )
+
+    channel = message.command[1].replace("@", "")
+
+    try:
+        chat = await client.get_chat(channel)
+
+        me = await client.get_me()
+
+        member = await client.get_chat_member(chat.id, me.id)
+
+        if member.status not in (
+            ChatMemberStatus.ADMINISTRATOR,
+            ChatMemberStatus.OWNER
+        ):
+            return await message.reply_text(
+                "‼️ 𝖥𝗂𝗋𝗌𝗍 𝗆𝖺𝗄𝖾 𝗆𝖾 𝖠𝖽𝗆𝗂𝗇 𝗂𝗇 𝗒𝗈𝗎𝗋 𝖼𝗁𝖺𝗇𝗇𝖾𝗅."
+            )
+
+    except Exception as e:
+        return await message.reply_text(
+            f"‼️ 𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝖢𝗁𝖺𝗇𝗇𝖾𝗅.\n\n{e}"
+        )
+
+    await add_force_sub(channel)
+
+    await message.reply_text(
+        f"✅ 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾 𝖠𝖽𝖽𝖾𝖽\n\n**𝖢𝗁𝖺𝗇𝗇𝖾𝗅 : @{channel}**"
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("removefsub") & filters.private)
+async def remove_fsub(client, message):
+
+    if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
+        return await message.reply_text("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "Usᴀɢᴇ: /removefsub @channelusername\nEx : /removefsub @Aero_Unity"
+        )
+
+    channel = message.command[1].replace("@", "")
+
+    await remove_force_sub(channel)
+
+    await message.reply_text(
+        f"✅ 𝖱𝖾𝗆𝗈𝗏𝖾𝖽 @{channel} 𝖥𝗋𝗈𝗆 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾."
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("fsublist") & filters.private)
+async def fsub_list(client, message):
+
+    if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
+        return await message.reply_text("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
+
+    channels = await get_force_subs()
+
+    if not channels:
+        return await message.reply_text(
+            "‼️ Nᴏ Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Cʜᴀɴɴᴇʟs ᴀᴅᴅᴇᴅ ᴏʀ Nᴏᴛ Fᴏᴜɴᴅ."
+        )
+
+    text = "**Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Cʜᴀɴɴᴇʟs Lɪsᴛ**\n\n"
+
+    for i, ch in enumerate(channels, start=1):
+        text += f"{i}. @{ch}\n"
+
+    await message.reply_text(text)
     
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
+# ------------------------- #
+# FORCE SUB CALLBACK
+# ------------------------- #
+
+@app.on_callback_query(filters.regex("checksub"))
+async def checksub_callback(client, query):
+
+    ok, keyboard = await check_force_sub(
+        client,
+        query.from_user.id
+    )
+
+    if not ok:
+        return await query.answer(
+            "‼️ Jᴏɪɴ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟs ғɪʀsᴛ.",
+            show_alert=True
+        )
+
+    # animation
+    await query.message.edit_media(
+        InputMediaPhoto(
+            CHECKING_IMAGE,
+            "Cʜᴇᴄᴋɪɴɢ Sᴜʙsᴄʀɪᴘᴛɪᴏɴ..."
+        )
+    )
+
+    await asyncio.sleep(1)
+
+    await query.message.edit_caption("!")
+
+    await asyncio.sleep(1)
+
+    await query.message.edit_caption("!!")
+
+    await asyncio.sleep(1)
+
+    await query.message.edit_caption("!!!")
+
+    await asyncio.sleep(1)
+
+    param = await get_verify(query.from_user.id)
+
+    if not param:
+        return await query.answer(
+            "❌ Verification expired. Go Back Try Again.",
+            show_alert=True
+        )
+
+    # remove force subscribe message
+    await query.message.delete()
+
+    # directly run start
+    fake = type("obj", (), {})()
+
+    fake.from_user = query.from_user
+    fake.command = ["start", param]
+    fake.text = f"/start {param}"
+    fake.chat = query.message.chat
+
+    fake.reply_text = query.message.reply_text
+    fake.reply_photo = query.message.reply_photo
+    fake.reply_video = query.message.reply_video
+    fake.reply_audio = query.message.reply_audio
+    fake.reply_document = query.message.reply_document
+    fake.reply_animation = query.message.reply_animation
+    fake.reply_sticker = query.message.reply_sticker
+    fake.reply = query.message.reply_text
+
+    await start(client, fake)
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+        
 # ABOUT HANDLER
 @app.on_callback_query(filters.regex("about"))
 async def about_callback(client, query):
