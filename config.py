@@ -50,3 +50,22 @@ PORT = int(os.getenv("PORT", "10000"))
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
+FORCE_SUB_IMAGE = os.getenv(
+    "FORCE_SUB_IMAGE",
+    "https://graph.org/file/14c3a336058422b14549d-85d887f6fd8a9cead5.jpg"
+)
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+CHECKING_IMAGE = os.getenv(
+    "CHECKING_IMAGE",
+    "https://graph.org/file/c658f88f509dd0c786ac5-44bdf2692f1ca00b29.jpg"
+)
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
