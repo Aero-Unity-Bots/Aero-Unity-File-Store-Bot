@@ -41,11 +41,11 @@
 - 🔐 Private File Storage Support
 - ⚡ Fast File Delivery via Telegram CDN
 - 🎬 Streaming Enabled Video Playback
-- 📝 Custom Captions Preservation
 - 👥 User Database Management
 - 📢 Broadcast Message System
 - 📊 Real-Time Bot Statistics
 - 👨‍💼 Multi-Admin Management System
+- 🔗 Multiples Force subs Adding ,removing and Force sub list
 - ➕ Add Admin Command
 - ➖ Remove Admin Command
 - 📋 Admin List Command
@@ -82,15 +82,19 @@
 ## 🤖 Bot Commands
 
 ```
-start - Start the bot and generate single file link (Owner/Admin only for file send)
+start - Start the bot and send direct file to get link (Owner/Admin)
+batch - Store multiple messages from channel (Owner/Admin only)
 system - Show bot system status (CPU, RAM, uptime, etc.)
 id - Get your Telegram user ID
 alive - Check bot is alive or not
-batch - Store multiple messages from channel (Owner/Admin only)
 stats - Check bot users and statistics (Owner only)
 broadcast - Send message to all users (Owner only)
-addadmin - Add admin using user id (Owner only) Example: /addadmin 123456789
-removeadmin - Remove admin using user id (Owner only) Example: /removeadmin 123456789
+addfsub - Add a channel to Force Subscribe (Owner only)
+removefsub - Remove a Force Subscribe channel (Owner only)
+fsublist - Show all Force Subscribe channels (Owner only)
+addadmin - Add admin using user id (Owner only)
+removeadmin - Remove admin using user id (Owner only)
+adminlist - check admins list
 ```
 ---
 
