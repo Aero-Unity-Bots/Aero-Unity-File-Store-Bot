@@ -494,7 +494,7 @@ async def start(client, message: Message):
                     await warn.delete()
                 except:
                     pass
-
+ 
                 return
 
         except Exception as e:
@@ -509,7 +509,7 @@ async def start(client, message: Message):
         original_caption = data.get("caption", "")
         caption = (
     f"**{original_caption}**\n\n"
-    f"**›› ʙʏ :** [ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)"
+    f"**›› ʙʏ :[ᴀᴇʀᴏ ᴜɴɪᴛʏ](https://t.me/Aero_Unity)**"
 )
 
         buttons = InlineKeyboardMarkup(
@@ -578,10 +578,15 @@ async def start(client, message: Message):
         await asyncio.sleep(300)
 
         try:
-           await sent.delete()
-           await warn.delete()
+            await sent.delete()
         except:
             pass
+
+        try:
+            await warn.delete()
+        except:
+            pass
+
         return
 
     # START MESSAGE WITH BUTTONS
@@ -852,27 +857,43 @@ async def remove_admin(client, message: Message):
 async def admin_list(client, message: Message):
 
     if message.from_user.id != OWNER_ID:
-        return await message.reply_text("🚫 𝗬𝗼𝘂 𝗔𝗿𝗲 𝗡𝗼𝘁 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝗧𝗼 𝗨𝘀𝗲 𝗧𝗵𝗶𝘀 𝗖𝗼𝗺𝗺𝗮𝗻𝗱")
+        return await message.reply_text(
+            "🚫 𝗬𝗼𝘂 𝗔𝗿𝗲 𝗡𝗼𝘁 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝗧𝗼 𝗨𝘀𝗲 𝗧𝗵𝗶𝘀 𝗖𝗼𝗺𝗺𝗮𝗻𝗱"
+        )
 
     admins = await get_all_admins()
 
     if not admins:
-        return await message.reply_text("‼️ Nᴏ Aᴅᴍɪɴs Fᴏᴜɴᴅ Iɴ Lɪsᴛ")
+        return await message.reply_text(
+            "‼️ Nᴏ Aᴅᴍɪɴs Fᴏᴜɴᴅ Iɴ Lɪsᴛ"
+        )
 
     text = "👑 Aᴅᴍɪɴ Lɪsᴛ\n\n"
 
     for i, admin in enumerate(admins, start=1):
+
         name = admin.get("name", "Unknown")
         username = admin.get("username", "None")
         user_id = admin.get("user_id")
 
         text += (
-            f"{i}.𝗡𝗮𝗺𝗲: {name}\n"
+            f"{i}. 𝗡𝗮𝗺𝗲: {name}\n"
             f"  𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @{username if username != 'None' else 'no_username'}\n"
             f"  𝗜𝗗: {user_id}\n\n"
         )
 
-    await message.reply_text(text)
+    await message.reply_photo(
+        photo=ADMINLIST_IMAGE,
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")
+                ]
+            ]
+        )
+    )
+    
 
 # ------------------------- #
 # FORCE SUBSCRIBE COMMANDS
@@ -1435,7 +1456,7 @@ async def system_info(client, message):
 # ------------------------- #
 
 if __name__ == "__main__":
-    keep_alive()
+    keep_alive()  
     print("""
 ╔══════════════════════════════╗
 ║   ᴍᴏʜᴀᴍᴍᴇᴅᴅᴇᴠ-ʏᴛ                   ║
