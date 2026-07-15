@@ -65,6 +65,17 @@ CHECKING_IMAGE = os.getenv(
     "CHECKING_IMAGE",
     "https://graph.org/file/c658f88f509dd0c786ac5-44bdf2692f1ca00b29.jpg"
 )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+ADMINLIST_IMAGE = os.getenv(
+    "ADMINLIST_IMAGE",
+    "https://graph.org/file/51f7bf1769486242f1180-03990f535eec7e1aba.jpg"
+)
+
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
