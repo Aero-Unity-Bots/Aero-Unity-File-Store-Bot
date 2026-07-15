@@ -20,6 +20,7 @@ files = db.files
 users = db.users
 admins = db["admins"]
 forcesubs = db["forcesubs"]
+banned = db["banned"]
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -131,20 +132,16 @@ async def is_admin(user_id):
     
 # ------------------------- #
 # Don't Remove Credit 
-# Ask Doubt @AU_Bot_Discussion 
-# Owner @Mr_Mohammed_29 
+# Owner @Mr_Mohammed_29
 # ------------------------- #
 
 async def add_force_sub(channel):
 
-    channel = channel.replace("@", "").lower()
-
     await forcesubs.update_one(
-        {"channel": channel},
-        {"$set": {"channel": channel}},
+        {"channel": str(channel)},
+        {"$set": {"channel": str(channel)}},
         upsert=True
     )
-    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -152,10 +149,8 @@ async def add_force_sub(channel):
 
 async def remove_force_sub(channel):
 
-    channel = channel.replace("@", "").lower()
-
     await forcesubs.delete_one(
-        {"channel": channel}
+        {"channel": str(channel)}
     )
 
 # ------------------------- #
@@ -205,6 +200,49 @@ async def get_verify(user_id):
 
 async def delete_verify(user_id):
     await verify_db.delete_one({"user_id": user_id})
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+# ------------------------- #
+# BAN SYSTEM
+# ------------------------- #
+
+async def ban_user(user_id):
+    await banned.update_one(
+        {"user_id": int(user_id)},
+        {"$set": {"user_id": int(user_id)}},
+        upsert=True
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def unban_user(user_id):
+    await banned.delete_one({"user_id": int(user_id)})
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def is_banned(user_id):
+    return await banned.find_one({"user_id": int(user_id)}) is not None
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_banned_users():
+    users = []
+    async for user in banned.find({}, {"_id": 0}):
+        users.append(user["user_id"])
+    return users
 
 # ------------------------- #
 # Don't Remove Credit 
