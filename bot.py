@@ -60,6 +60,10 @@ from database import (
     save_verify,
     get_verify,
     delete_verify,
+    ban_user,
+    unban_user,
+    is_banned,
+    get_banned_users
 )
 
 # ------------------------- #
@@ -137,6 +141,11 @@ async def get_message_id(client, link):
 @app.on_message(filters.command("batch") & filters.private)
 async def batch_command(client, message):
 
+    if await is_banned(message.from_user.id):
+        return await message.reply_text(
+            "🚫 You are banned from using this bot."
+        )
+
     user_id = message.from_user.id
 
     if user_id != OWNER_ID and not await is_admin(user_id):
@@ -170,6 +179,9 @@ async def batch_command(client, message):
         "addfsub",
         "removefsub",
         "fsublist",
+        "ban",
+        "unban",
+        "banlist",
         "alive",
         "id",
        "system"
@@ -262,10 +274,12 @@ async def check_force_sub(client, user_id):
     for channel in channels:
 
         try:
-            member = await client.get_chat_member(
-                channel,
-                user_id
-            )
+            try:
+                channel = int(channel)
+            except:
+                pass
+
+            member = await client.get_chat_member(channel, user_id)
 
             if member.status in [
                 "left",
@@ -324,6 +338,16 @@ async def check_force_sub(client, user_id):
 async def start(client, message: Message):
 
     user_id = message.from_user.id
+
+    if await is_banned(user_id):
+        return await message.reply_text(
+            "🚫 **You are banned from using this bot.**\n\n"
+            "**If you believe this is a mistake, contact the "
+            "[Owner](https://t.me/Mr_Mohammed_29).**",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True
+        )
+
     await add_user(user_id)
 
     # Save parameter before Force Subscribe check
@@ -595,6 +619,11 @@ async def start(client, message: Message):
 )
 async def save_media(client, message: Message):
 
+    if await is_banned(message.from_user.id):
+        return await message.reply_text(
+            "🚫 You are banned from using this bot."
+        )
+
     # Allow only owner + admin
     if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
         return await message.reply_text(" ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
@@ -645,6 +674,7 @@ async def save_media(client, message: Message):
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
 # STATS
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats(client, message: Message):
@@ -719,6 +749,7 @@ async def broadcast(client, message: Message):
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+    
 @app.on_message(
     filters.private &
     ~filters.service &
@@ -733,12 +764,19 @@ async def broadcast(client, message: Message):
         "addfsub",
         "removefsub",
         "fsublist",
+        "ban",
+        "unban",
+        "banlist",
         "alive",
         "id",
         "system"
     ])
 )
 async def auto_add_user(client, message):
+
+    if message.from_user and await is_banned(message.from_user.id):
+        return
+        
     if message.from_user:
         await add_user(message.from_user.id)
         
@@ -840,6 +878,111 @@ async def admin_list(client, message: Message):
 # FORCE SUBSCRIBE COMMANDS
 # ------------------------- #
 
+@app.on_message(filters.command("ban") & filters.private)
+async def ban(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "Usage:\n/ban user_id"
+        )
+
+    try:
+        user_id = int(message.command[1])
+    except:
+        return await message.reply_text("Invalid User ID")
+
+    await ban_user(user_id)
+
+    await message.reply_text(
+        f"✅ User `{user_id}` has been banned."
+    )
+
+    try:
+        await client.send_message(
+            user_id,
+            "🚫 You have been banned from using this bot."
+        )
+    except:
+        pass
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("unban") & filters.private)
+async def unban(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "Usage:\n/unban user_id"
+        )
+
+    try:
+        user_id = int(message.command[1])
+    except:
+        return await message.reply_text("Invalid User ID")
+
+    await unban_user(user_id)
+
+    await message.reply_text(
+        f"✅ User `{user_id}` has been unbanned."
+    )
+
+    try:
+        await client.send_message(
+            user_id,
+            "🎉 You have been unbanned. You can use the bot again."
+        )
+    except:
+        pass
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("banlist") & filters.private)
+async def banlist(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    users = await get_banned_users()
+
+    if not users:
+        return await message.reply_text(
+            "✅ No banned users."
+        )
+
+    text = "🚫 **Banned Users List**\n\n"
+
+    for i, user in enumerate(users, 1):
+        text += f"**{i}.** `{user}`\n"
+
+    await message.reply_photo(
+        photo="https://graph.org/file/26cccf142db47cbcc489e-5d5b36c222d0b2d898.jpg",
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 @app.on_message(filters.command("addfsub") & filters.private)
 async def add_fsub(client, message):
 
@@ -851,7 +994,12 @@ async def add_fsub(client, message):
             "Usᴀɢᴇ: /addfsub @channelusername\nEx: /addfsub @Aero_Unity"
         )
 
-    channel = message.command[1].replace("@", "")
+    channel = message.command[1]
+
+    try:
+        channel = int(channel)
+    except:
+        channel = channel.replace("@", "")
 
     try:
         chat = await client.get_chat(channel)
@@ -875,8 +1023,14 @@ async def add_fsub(client, message):
 
     await add_force_sub(channel)
 
+    if isinstance(channel, int):
+        channel_name = str(channel)
+    else:
+        channel_name = f"@{channel}"
+
     await message.reply_text(
-        f"✅ 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾 𝖠𝖽𝖽𝖾𝖽\n\n**𝖢𝗁𝖺𝗇𝗇𝖾𝗅 : @{channel}**"
+        f"✅ 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾 𝖠𝖽𝖽𝖾𝖽\n\n"
+        f"**𝖢𝗁𝖺𝗇𝗇𝖾𝗅 : {channel_name}**"
     )
 
 # ------------------------- #
@@ -895,14 +1049,23 @@ async def remove_fsub(client, message):
             "Usᴀɢᴇ: /removefsub @channelusername\nEx : /removefsub @Aero_Unity"
         )
 
-    channel = message.command[1].replace("@", "")
+    channel = message.command[1]
+
+    try:
+        channel = int(channel)
+    except:
+        channel = channel.replace("@", "")
 
     await remove_force_sub(channel)
 
-    await message.reply_text(
-        f"✅ 𝖱𝖾𝗆𝗈𝗏𝖾𝖽 @{channel} 𝖥𝗋𝗈𝗆 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾."
-    )
+    if isinstance(channel, int):
+        channel_name = str(channel)
+    else:
+        channel_name = f"@{channel}"
 
+    await message.reply_text(
+        f"✅ 𝖱𝖾𝗆𝗈𝗏𝖾𝖽 {channel_name} 𝖥𝗋𝗈𝗆 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾."
+)
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -921,12 +1084,40 @@ async def fsub_list(client, message):
             "‼️ Nᴏ Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Cʜᴀɴɴᴇʟs ᴀᴅᴅᴇᴅ ᴏʀ Nᴏᴛ Fᴏᴜɴᴅ."
         )
 
-    text = "**Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Cʜᴀɴɴᴇʟs Lɪsᴛ**\n\n"
+    text = "**📢 Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Cʜᴀɴɴᴇʟs Lɪsᴛ**\n\n"
 
     for i, ch in enumerate(channels, start=1):
-        text += f"{i}. @{ch}\n"
+        try:
+            chat = await client.get_chat(ch)
 
-    await message.reply_text(text)
+            if chat.username:
+                text += f"**{i}.** @{chat.username}\n"
+            else:
+                text += (
+                    f"**{i}.** {chat.title}\n"
+                    f"**ID:** `{chat.id}`\n\n"
+                )
+
+        except:
+            if str(ch).startswith("-100"):
+                text += (
+                    f"**{i}.** 🔒 Private Channel\n"
+                    f"**ID:** `{ch}`\n\n"
+                )
+            else:
+                text += f"**{i}.** @{ch}\n"
+
+    await message.reply_photo(
+        photo="https://graph.org/file/ffdbc01d09855874311b1-5f3f1eae52d984db3d.jpg",
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")
+                ]
+            ]
+        )
+    )
     
 # ------------------------- #
 # Don't Remove Credit 
@@ -963,15 +1154,15 @@ async def checksub_callback(client, query):
 
     await query.message.edit_caption("!")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
     await query.message.edit_caption("!!")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
     await query.message.edit_caption("!!!")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
     param = await get_verify(query.from_user.id)
 
@@ -1064,6 +1255,15 @@ async def home_callback(client, query):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
+@app.on_callback_query(filters.regex("^close$"))
+async def close_button(client, query):
+    await query.message.delete()
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 # REFRESH STATS 
 @app.on_callback_query(filters.regex("refresh_stats"))
 async def refresh_stats(client, query):
@@ -1108,6 +1308,11 @@ async def refresh_stats(client, query):
 @app.on_message(filters.command("alive"))
 async def alive(client, message):
 
+    if await is_banned(message.from_user.id):
+        return await message.reply_text(
+            "🚫 You are banned from using this bot."
+        )
+
     await message.reply_photo(
         photo="https://graph.org/file/af61bc94f516c210ecb37-7cdb22e66ea9539e3b.jpg",
         caption=(
@@ -1127,6 +1332,11 @@ async def alive(client, message):
 
 @app.on_message(filters.command("id"))
 async def get_id(client, message):
+
+    if await is_banned(message.from_user.id):
+        return await message.reply_text(
+            "🚫 You are banned from using this bot."
+        )
 
     user = message.from_user
 
@@ -1185,6 +1395,11 @@ async def get_id(client, message):
 
 @app.on_message(filters.command("system"))
 async def system_info(client, message):
+
+    if await is_banned(message.from_user.id):
+        return await message.reply_text(
+            "🚫 You are banned from using this bot."
+        )
 
     os_name = platform.system()
 
