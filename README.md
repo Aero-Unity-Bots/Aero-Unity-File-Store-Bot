@@ -49,6 +49,8 @@
 - ➕ Add Admin Command
 - ➖ Remove Admin Command
 - 📋 Admin List Command
+- 😀 Ban users
+- 😃 Unban users and banlist
 - 🎨 Attractive Start Message with Images & Buttons
 - 🛡 Secure File Access via Unique Links
 - 🗄 MongoDB Database Support
