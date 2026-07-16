@@ -77,6 +77,16 @@ ADMINLIST_IMAGE = os.getenv(
 )
 
 # ------------------------- #
-# Don't Remove Credit 
+# Don't Remove Credit
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+INDEX_IMAGE = os.getenv(
+    "INDEX_IMAGE",
+    "https://graph.org/file/d8a01f513fb925e5a0743-17d6591665bbca7517.jpg"
+)
+
+# ------------------------- #
+# Don't Remove Credit
 # Owner @Mr_Mohammed_29
 # ------------------------- #
