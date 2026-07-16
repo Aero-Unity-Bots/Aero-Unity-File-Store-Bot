@@ -1206,8 +1206,19 @@ async def add_fsub(client, message):
         return await message.reply_text(
             f"‼️ 𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝖢𝗁𝖺𝗇𝗇𝖾𝗅.\n\n{e}"
         )
+    channels = await get_force_subs()
 
-    await add_force_sub(channel)
+    if str(chat.id) in channels:
+        return await message.reply_text(
+            "⚠️ This channel is already in Force Subscribe."
+        )
+    
+    if chat.username and chat.username in channels:
+        return await message.reply_text(
+            "⚠️ This channel is already in Force Subscribe."
+        )
+
+    await add_force_sub(chat.id)
 
     await message.reply_text(
         f"**Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Aᴅᴅᴇᴅ**\n\n"
@@ -1223,11 +1234,13 @@ async def add_fsub(client, message):
 async def remove_fsub(client, message):
 
     if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
-        return await message.reply_text("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃..")
+        return await message.reply_text("🚫 Unauthorized.")
 
     if len(message.command) < 2:
         return await message.reply_text(
-            "Usᴀɢᴇ: /removefsub @channelusername\nEx : /removefsub @Aero_Unity"
+            "Usage:\n"
+            "/removefsub @channel\n"
+            "/removefsub -100xxxxxxxxxx"
         )
 
     channel = message.command[1]
@@ -1237,16 +1250,23 @@ async def remove_fsub(client, message):
     except:
         channel = channel.replace("@", "")
 
-    await remove_force_sub(channel)
+    try:
+        chat = await client.get_chat(channel)
 
-    if isinstance(channel, int):
-        channel_name = str(channel)
-    else:
-        channel_name = f"@{channel}"
+        await remove_force_sub(chat.id)
 
-    await message.reply_text(
-        f"✅ 𝖱𝖾𝗆𝗈𝗏𝖾𝖽 {channel_name} 𝖥𝗋𝗈𝗆 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾."
-)
+        if chat.username:
+            await remove_force_sub(chat.username)
+            await remove_force_sub(f"@{chat.username}")
+
+        await message.reply_text(
+            f"✅ Removed **{chat.title}** from Force Subscribe."
+        )
+
+    except Exception as e:
+        return await message.reply_text(
+            f"❌ Failed to remove.\n\n{e}"
+        )
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
