@@ -149,8 +149,15 @@ async def add_force_sub(channel):
 
 async def remove_force_sub(channel):
 
-    await forcesubs.delete_one(
-        {"channel": str(channel)}
+    await forcesubs.delete_many(
+        {
+            "channel": {
+                "$in": [
+                    str(channel),
+                    str(channel).replace("@", "")
+                ]
+            }
+        }
     )
 
 # ------------------------- #
