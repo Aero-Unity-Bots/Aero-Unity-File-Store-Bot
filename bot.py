@@ -102,6 +102,18 @@ import re
 # ------------------------- #
 
 BATCH_USERS = {}
+INDEX_CACHE = {}
+
+# ------------------------- #
+# INDEX SYSTEM
+# ------------------------- #
+
+LETTERS = [
+    "A","B","C","D","E","F","G",
+    "H","I","J","K","L","M","N",
+    "O","P","Q","R","S","T",
+    "U","V","W","X","Y","Z"
+]
 
 # ================= GET MESSAGE ID =================
 
@@ -179,6 +191,7 @@ async def batch_command(client, message):
         "addfsub",
         "removefsub",
         "fsublist",
+        "index",
         "ban",
         "unban",
         "banlist",
@@ -288,11 +301,20 @@ async def check_force_sub(client, user_id):
 
                 chat = await client.get_chat(channel)
 
+                if chat.username:
+                    join_link = f"https://t.me/{chat.username}"
+                else:
+                    invite = await client.create_chat_invite_link(
+                        chat_id=chat.id,
+                        expire_date=int(time.time()) + 600
+                    )
+                    join_link = invite.invite_link
+
                 buttons.append(
                     [
                         InlineKeyboardButton(
                             f"• {chat.title} •",
-                            url=f"https://t.me/{channel}"
+                            url=join_link
                         )
                     ]
                 )
@@ -301,19 +323,27 @@ async def check_force_sub(client, user_id):
 
             try:
                 chat = await client.get_chat(channel)
-                title = chat.title
-            except:
-                title = channel.replace("_", " ").title()
-
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        f"• {title} •",
-                        url=f"https://t.me/{channel}"
+  
+                if chat.username:
+                    join_link = f"https://t.me/{chat.username}"
+                else:
+                    invite = await client.create_chat_invite_link(
+                        chat_id=chat.id,
+                        expire_date=int(time.time()) + 600
                     )
-                ]
-            )
+                    join_link = invite.invite_link
 
+                buttons.append(
+                    [
+                        InlineKeyboardButton(
+                            f"• {chat.title} •",
+                            url=join_link
+                        )
+                    ]
+                )
+
+            except:
+                pass
     if buttons:
 
         buttons.append(
@@ -769,6 +799,7 @@ async def broadcast(client, message: Message):
         "addfsub",
         "removefsub",
         "fsublist",
+        "index",
         "ban",
         "unban",
         "banlist",
@@ -893,8 +924,118 @@ async def admin_list(client, message: Message):
             ]
         )
     )
-    
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+    
+@app.on_message(filters.command("index") & filters.private)
+async def index_command(client, message):
+
+    if not (
+        message.from_user.id == OWNER_ID
+        or await is_admin(message.from_user.id)
+    ):
+        return await message.reply_text(
+            "🚫 **You are not authorized to use this command.**"
+        )
+
+    rows = []
+
+    for i in range(0, 26, 4):
+        row = []
+
+        for letter in LETTERS[i:i+4]:
+            row.append(
+                InlineKeyboardButton(
+                    letter,
+                    callback_data=f"index_{letter}"
+                )
+            )
+
+        rows.append(row)
+
+    rows.append(
+        [
+            InlineKeyboardButton(
+                "• ᴄʟᴏsᴇ •",
+                callback_data="close"
+            )
+        ]
+    )
+
+    await message.reply_photo(
+        photo=INDEX_IMAGE,
+        caption=(
+            " **Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Iɴᴅᴇx**\n\n"
+            "**Sᴇʟᴇᴄᴛ ᴀ ʟᴇᴛᴛᴇʀ ᴛᴏ ᴠɪᴇᴡ ᴄʜᴀɴɴᴇʟs.**"
+        ),
+        reply_markup=InlineKeyboardMarkup(rows)
+    )
+
+# ------------------------- #
+# INDEX LETTER CALLBACK
+# ------------------------- #
+
+@app.on_callback_query(filters.regex(r"^index_([A-Z])$"))
+async def index_letter_callback(client, query):
+
+    letter = query.data.split("_")[1]
+
+    channels = await get_force_subs()
+
+    text = f"**ᴄʜᴀɴɴᴇʟs sᴛᴀʀᴛɪɴɢ ᴡɪᴛʜ {letter}**\n\n"
+
+    found = False
+
+    for i, ch in enumerate(channels, start=1):
+
+        try:
+            chat = await client.get_chat(ch)
+
+            if not chat.title.upper().startswith(letter):
+                continue
+
+            found = True
+
+            if chat.username:
+                text += (
+                    f"**{i}.** @{chat.username}\n"
+                    f"**ID:** `{chat.id}`\n\n"
+                )
+            else:
+                text += (
+                    f"**{i}.** {chat.title}\n"
+                    f"**ID:** `{chat.id}`\n\n"
+                )
+
+        except:
+            continue
+
+    if not found:
+        text += "**Nᴏ ᴄʜᴀɴɴᴇʟs ғᴏᴜɴᴅ ᴏʀ ᴀᴅᴅᴇᴅ**"
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "• ʙᴀᴄᴋ •",
+                    callback_data="index_back"
+                ),
+                InlineKeyboardButton(
+                    "• ᴄʟᴏsᴇ •",
+                    callback_data="close"
+                )
+            ]
+        ]
+    )
+
+    await query.message.edit_caption(
+        caption=text,
+        reply_markup=keyboard
+    )
+    
 # ------------------------- #
 # FORCE SUBSCRIBE COMMANDS
 # ------------------------- #
@@ -924,7 +1065,7 @@ async def ban(client, message):
     try:
         await client.send_message(
             user_id,
-            "🚫 You have been banned from using this bot."
+            "**🚫 You have been banned from using this bot.**"
         )
     except:
         pass
@@ -959,7 +1100,7 @@ async def unban(client, message):
     try:
         await client.send_message(
             user_id,
-            "🎉 You have been unbanned. You can use the bot again."
+            "**🎉 You have been unbanned. You can use the bot again.**"
         )
     except:
         pass
@@ -1010,17 +1151,41 @@ async def add_fsub(client, message):
     if not (message.from_user.id == OWNER_ID or await is_admin(message.from_user.id)):
         return await message.reply_text("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ᴍᴀsᴛᴇʀ. ɢᴏ ᴀᴡᴀʏ, ʙɪᴛᴄʜ 🙃...")
 
-    if len(message.command) < 2:
-        return await message.reply_text(
-            "Usᴀɢᴇ: /addfsub @channelusername\nEx: /addfsub @Aero_Unity"
-        )
+    # Reply to forwarded channel post
+    if message.reply_to_message:
 
-    channel = message.command[1]
+        reply = message.reply_to_message
 
-    try:
-        channel = int(channel)
-    except:
-        channel = channel.replace("@", "")
+        if reply.forward_from_chat:
+            chat = reply.forward_from_chat
+
+        elif reply.sender_chat:
+            chat = reply.sender_chat
+
+        else:
+            return await message.reply_text(
+                "‼️ Reply to a forwarded channel post."
+            )
+
+        channel = chat.id
+
+        # Username / ID method
+    else:
+
+        if len(message.command) < 2:
+            return await message.reply_text(
+                "Usage:\n"
+                 "/addfsub @channel\n"
+                 "/addfsub -100xxxxxxxxxx\n\n"
+                 "OR reply to a forwarded private channel post with /addfsub."
+            )
+
+        channel = message.command[1]
+
+        try:
+            channel = int(channel)
+        except:
+            channel = channel.replace("@", "")
 
     try:
         chat = await client.get_chat(channel)
@@ -1044,16 +1209,11 @@ async def add_fsub(client, message):
 
     await add_force_sub(channel)
 
-    if isinstance(channel, int):
-        channel_name = str(channel)
-    else:
-        channel_name = f"@{channel}"
-
     await message.reply_text(
-        f"✅ 𝖥𝗈𝗋𝖼𝖾 𝖲𝗎𝖻𝗌𝖼𝗋𝗂𝖻𝖾 𝖠𝖽𝖽𝖾𝖽\n\n"
-        f"**𝖢𝗁𝖺𝗇𝗇𝖾𝗅 : {channel_name}**"
+        f"**Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Aᴅᴅᴇᴅ**\n\n"
+        f"**ᴄʜᴀɴɴᴇʟ:** {chat.title}\n"
+        f"*ɪᴅ:** `{chat.id}`"
     )
-
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -1144,6 +1304,48 @@ async def fsub_list(client, message):
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
+# ------------------------- #
+# INDEX BACK CALLBACK
+# ------------------------- #
+
+@app.on_callback_query(filters.regex("^index_back$"))
+async def index_back_callback(client, query):
+
+    rows = []
+
+    for i in range(0, 26, 4):
+        row = []
+
+        for letter in LETTERS[i:i+4]:
+            row.append(
+                InlineKeyboardButton(
+                    letter,
+                    callback_data=f"index_{letter}"
+                )
+            )
+
+        rows.append(row)
+
+    rows.append(
+        [
+            InlineKeyboardButton(
+                "• ᴄʟᴏsᴇ •",
+                callback_data="close"
+            )
+        ]
+    )
+
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=INDEX_IMAGE,
+            caption=(
+                "**Fᴏʀᴄᴇ Sᴜʙsᴄʀɪʙᴇ Iɴᴅᴇx**\n\n"
+                "**Sᴇʟᴇᴄᴛ ᴀ ʟᴇᴛᴛᴇʀ ᴛᴏ ᴠɪᴇᴡ ᴄʜᴀɴɴᴇʟs**."
+            )
+        ),
+        reply_markup=InlineKeyboardMarkup(rows)
+    )
 
 # ------------------------- #
 # FORCE SUB CALLBACK
