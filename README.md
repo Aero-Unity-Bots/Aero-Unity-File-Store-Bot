@@ -32,36 +32,54 @@
 ![Forks](https://img.shields.io/github/forks/Coder-yt/filelinkbot?style=social)
 ![Last Commit](https://img.shields.io/github/last-commit/Coder-yt/filelinkbot)
 
-✨ Features
+## ✨ Features
 
-- 🔗 Generate secure file-sharing links instantly
-- 📁 Store videos, documents, audio files, stickers, and GIFs
-- 📦 Batch Link Generator for multiple files/messages
-- 👑 Owner & Admin Upload Access System
-- 🔐 Private File Storage Support
-- ⚡ Fast File Delivery
-- 🎬 Streaming Enabled Video Playback
-- 👥 User Database Management
-- 📢 Broadcast Message System
-- 📊 Real-Time Bot Statistics
-- 👨‍💼 Multi-Admin Management System
-- 🔗 Multiples Force subs Adding ,removing and Force sub list
-- ✨️ Index checking Force sub added 
-- ➕ Add Admin Command
-- ➖ Remove Admin Command
-- 📋 Admin List Command
-- 😀 Ban users
-- 😃 Unban users and banlist
-- 🎨 Attractive Start Message with Images & Buttons
-- 🛡 Secure File Access via Unique Links
-- 🗄 MongoDB Database Support
-- ☁️ Deployable on Render, Koyeb, VPS & More
-- 🚀 Lightweight & High-Speed Performance
-- 💯 Easy Setup & User-Friendly Interface
-- 🎊 System Performance 
-- ✨️ Id checker
-- 🤖 checking bot is alive ,friendly 
+### 👤 User Features
+- 🚀 **Start Bot** and generate shareable file links (Owner/Admin uploads)
+- 📦 **Batch File Store** for multiple channel messages (Owner/Admin)
+- 🆔 **User ID** lookup command
+- 💚 **Alive Check** to verify bot status
+- 🔒 **Privacy Policy** command
+- 🏷️ **Version Information** with developer details
+- 🆘 **Support Center** with quick support links
+- 💾 **Storage Usage** statistics
+- 📊 **Bot Analytics** (CPU, RAM, Disk, Uptime, Storage)
+- ⚡ **Server Speed Test**
+- 🖼️ Premium UI with images and inline buttons
 
+### 👑 Owner & Admin Features
+- 📥 **Batch Indexing** of Telegram channel posts
+- 📈 **Bot Statistics** (Users & Database)
+- 📑 **Force Subscribe Index** viewer
+- ➕ **Add Force Subscribe** channels
+- ➖ **Remove Force Subscribe** channels
+- 📋 **Force Subscribe List**
+- ➕ **Add Admin**
+- ➖ **Remove Admin**
+- 👥 **Admin List**
+- 🔨 **Ban Users**
+- 🔓 **Unban Users**
+- 🚫 **Banned Users List**
+- 🔄 **Restart Bot**
+- 🧹 **Clear Bot Cache**
+- 📄 **Detailed File Information**
+- 💾 **Database Backup**
+- ♻️ **Database Restore**
+- 🧹 **Cleanup Temporary Cache**
+- 🗄️ **Database Information**
+- 📂 **File Statistics**
+- 📢 **Broadcast Messages** to all users
+
+### ⚙️ Technical Features
+- 🚀 Built with **Pyrogram 2.x**
+- 🗄️ MongoDB (Motor) Database
+- ☁️ Render Deployment Ready
+- ⚡ Async & High-Speed Performance
+- 🔒 Secure Force Subscribe System
+- 📂 Unlimited File Storage
+- 🔗 Instant Shareable File Links
+- 🎨 Premium Command UI
+- 🖥️ 24/7 Uptime Support
 📂 Supported Media Types
 
 - 🎥 Videos
@@ -81,7 +99,7 @@
 | OWNER_ID       | Telegram user ID of bot owner                | 987654321                    |
 | BOT_USERNAME   | Bot username (without @)                     | AU_FILESTORE_BOT             |
 | CHANNEL_ID     | Channel ID where bot is connected (Database) | -1001234567890               |
-
+| LOG_CHANNEL  | Log channel id | -10987654321 |
 ## 🤖 Bot Commands
 
 ```
@@ -90,8 +108,14 @@ batch - Store multiple messages from channel (Owner/Admin only)
 system - Show bot system status (CPU, RAM, uptime, etc.)
 id - Get your Telegram user ID
 alive - Check bot is alive or not
+privacy - View privacy policy
+version - View bot version
+support - Contact support
+storage - View storage usage
+analysis - View bot analytics
+speedtest - Test server speed
 stats - Check bot users and statistics (Owner only)
-index - check Force sub index added
+index - check Force sub index added (Owner only)
 addfsub - Add a channel to Force Subscribe (Owner | Admin only)
 removefsub - Remove a Force Subscribe channel (Owner | Admin only)
 fsublist - Show all Force Subscribe channels (Owner | Admin only)
@@ -101,6 +125,14 @@ adminlist - check admins list (Owner only)
 ban - ban a user (Owner only)
 unban - unban a user (Owner Only) 
 banlist - check ban user list (Owner Only)
+restart - Restart the bot (Owner Only)
+clearcache - Clear bot cache (Owner only)
+fileinfo - View file information (Owner only)
+backupdb - Backup database (Owner only)
+restoredb - Restore database (Owner only)
+cleanup - Clean cache & temp data (Owner only)
+dbinfo - View database information (Owner only)
+filestats - View file statistics (Owner only)
 broadcast - Send message to all users (Owner only)
 ```
 ---
