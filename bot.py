@@ -9,7 +9,16 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from config import *
 from pyrogram.types import InputMediaPhoto
 from pyrogram.enums import ParseMode, ChatMemberStatus
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, UserNotParticipant
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+import io
+import shutil 
+from contextlib import redirect_stdout, redirect_stderr
+from pymongo import DESCENDING
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -21,10 +30,17 @@ import sys
 import platform
 import random
 import psutil
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 import time
+import gc
 import asyncio 
 import traceback
-
+import speedtest
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -47,9 +63,12 @@ IMAGES = [
 from database import (
     save_file,
     get_file,
+    increase_download,
     add_user,
     get_all_users,
     total_users,
+    total_files, 
+    total_admins,
     add_admin_db,
     remove_admin_db,
     is_admin,
@@ -57,13 +76,23 @@ from database import (
     add_force_sub,
     remove_force_sub,
     get_force_subs,
+    files,
+    users,
+    verify_db,
     save_verify,
     get_verify,
     delete_verify,
     ban_user,
     unban_user,
     is_banned,
-    get_banned_users
+    get_file_by_unique_id,
+    today_files,
+    week_files,
+    storage_used,
+    top_uploaders,
+    export_database,
+    database_info,
+    import_database
 )
 
 # ------------------------- #
@@ -75,6 +104,24 @@ from keep_alive import keep_alive
 
 START_TIME = time.time()
 BOT_VERSION = "v3.0"
+CACHE = {}
+MAINTENANCE = False
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+def format_size(size):
+    power = 1024
+    units = ["B", "KB", "MB", "GB", "TB"]
+
+    n = 0
+    while size > power and n < len(units) - 1:
+        size /= power
+        n += 1
+
+    return f"{size:.2f} {units[n]}"
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -88,6 +135,21 @@ app = Client(
     bot_token=BOT_TOKEN
 ) 
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def send_log(text):
+    try:
+        await app.send_message(
+            LOG_CHANNEL,
+            text,
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        print(e)
+        
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -197,7 +259,21 @@ async def batch_command(client, message):
         "banlist",
         "alive",
         "id",
-       "system"
+        "system", 
+        "restart",
+        "clearcache",
+        "fileinfo",
+        "privacy",
+        "version",
+        "support",
+        "storage",
+        "backupdb",
+        "restoredb",
+        "cleanup",
+        "analysis",
+        "speedtest",
+        "filestats",
+        "dbinfo"
     ])
 )
 async def handle_batch(client, message):
@@ -287,77 +363,60 @@ async def check_force_sub(client, user_id):
     for channel in channels:
 
         try:
+            chat = await client.get_chat(channel)
+        except Exception:
+            # Invalid/deleted channel in DB
             try:
-                channel = int(channel)
+                await remove_force_sub(channel)
             except:
                 pass
+            continue
 
-            member = await client.get_chat_member(channel, user_id)
+        try:
+            member = await client.get_chat_member(chat.id, user_id)
 
-            if member.status in [
-                "left",
-                "kicked"
-            ]:
+            if member.status in (
+                ChatMemberStatus.LEFT,
+                ChatMemberStatus.BANNED
+            ):
+                raise UserNotParticipant
 
-                chat = await client.get_chat(channel)
+        except UserNotParticipant:
 
-                if chat.username:
-                    join_link = f"https://t.me/{chat.username}"
-                else:
+            if chat.username:
+                link = f"https://t.me/{chat.username}"
+            else:
+                try:
                     invite = await client.create_chat_invite_link(
-                        chat_id=chat.id,
-                        expire_date=int(time.time()) + 600
+                        chat.id,
+                        member_limit=1
                     )
-                    join_link = invite.invite_link
+                    link = invite.invite_link
+                except:
+                    continue
 
-                buttons.append(
-                    [
-                        InlineKeyboardButton(
-                            f"• {chat.title} •",
-                            url=join_link
-                        )
-                    ]
-                )
-
-        except:
-
-            try:
-                chat = await client.get_chat(channel)
-  
-                if chat.username:
-                    join_link = f"https://t.me/{chat.username}"
-                else:
-                    invite = await client.create_chat_invite_link(
-                        chat_id=chat.id,
-                        expire_date=int(time.time()) + 600
-                    )
-                    join_link = invite.invite_link
-
-                buttons.append(
-                    [
-                        InlineKeyboardButton(
-                            f"• {chat.title} •",
-                            url=join_link
-                        )
-                    ]
-                )
-
-            except:
-                pass
-    if buttons:
-
-        buttons.append(
-            [
+            buttons.append([
                 InlineKeyboardButton(
-                    "• ᴛʀʏ ᴀɢᴀɪɴ •",
-                    callback_data="checksub"
+                    chat.title,
+                    url=link
                 )
-            ]
-        )
+            ])
+
+        except Exception:
+            continue
+
+    if buttons:
+        buttons.append([
+            InlineKeyboardButton(
+                "• ᴛʀʏ ᴀɢᴀɪɴ •",
+                callback_data="checksub"
+            )
+        ])
 
         return False, InlineKeyboardMarkup(buttons)
 
     return True, None
+    
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -384,6 +443,15 @@ async def start(client, message: Message):
     if len(message.command) > 1:
         param = message.command[1]
         await save_verify(user_id, param)
+
+    user = message.from_user
+
+    await send_log(
+        f"**ɴᴇᴡ ᴜsᴇʀ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ**\n\n"
+        f"👤 **{user.first_name}**\n"
+        f"🆔 **`{user.id}`**\n"
+        f"📛 **@{user.username if user.username else 'None'}**"
+    )
 
     # ------------------------- #
     # FORCE SUBSCRIBE CHECK
@@ -498,12 +566,37 @@ async def start(client, message: Message):
 
                         sent_messages.append(sent)
 
+                        try:
+                            unique_id = None
+
+                            if msg.video:
+                                unique_id = msg.video.file_unique_id
+                            elif msg.document:
+                                unique_id = msg.document.file_unique_id
+                            elif msg.audio:
+                                unique_id = msg.audio.file_unique_id
+                            elif msg.animation:
+                                unique_id = msg.animation.file_unique_id
+
+                            if unique_id:
+                                await increase_download(unique_id)
+
+                        except Exception:
+                           pass
+
                         await asyncio.sleep(0.3)
 
                     except Exception as e:
                         print(e)
 
                 await wait.delete()
+
+                await send_log(
+                    f"📦 **Bᴀᴛᴄʜ Aᴄᴄᴇss**\n\n"
+                    f"👤 {message.from_user.mention}\n"
+                    f"🆔 `{message.from_user.id}`\n"
+                    f"Messages: {first_id} - {last_id}"
+                )
 
                 warn = await message.reply_text(
                     " **⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...**\n\n"
@@ -588,7 +681,16 @@ async def start(client, message: Message):
         else:
             return await message.reply_text("‼️ Unsupported format")
 
+        await increase_download(file_unique_id)
+
         await delete_verify(user_id)
+
+        await send_log(
+            f"📥 **Fɪʟᴇ Aᴄᴄᴇssᴇᴅ**\n\n"
+            f"👤 {message.from_user.mention}\n"
+            f"🆔 `{message.from_user.id}`\n"
+            f"📂 {data.get('caption','No Caption')}"
+        )
 
         warn = await message.reply_text(
     " **⏳ Dᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪssᴜᴇs...**\n\n"
@@ -699,7 +801,23 @@ async def save_media(client, message: Message):
     file_id = file.file_id
     file_unique_id = file.file_unique_id
 
-    await save_file(file_id, file_unique_id, file_type, original_caption, thumb)
+    await save_file(
+        file_id=file_id,
+        file_unique_id=file_unique_id,
+        file_type=file_type,
+        caption=original_caption,
+        thumb=thumb,
+        file_name=getattr(file, "file_name", ""),
+        file_size=getattr(file, "file_size", 0),
+        uploader_id=message.from_user.id
+    )
+
+    await send_log(
+        f"📤 **Nᴇᴡ Fɪʟᴇ Uᴘʟᴏᴀᴅᴇᴅ**\n\n"
+        f"👤 {message.from_user.mention}\n"
+        f"🆔 `{message.from_user.id}`\n"
+        f"📁 {getattr(file, 'file_name', file_type)}"
+    )
 
     link = f"https://t.me/{BOT_USERNAME}?start={file_unique_id}"
 
@@ -805,7 +923,21 @@ async def broadcast(client, message: Message):
         "banlist",
         "alive",
         "id",
-        "system"
+        "system",
+        "restart",
+        "clearcache",
+        "fileinfo",
+        "privacy",
+        "version",
+        "support",
+        "storage",
+        "backupdb",
+        "restoredb",
+        "cleanup",
+        "analysis",
+        "speedtest",
+        "filestats",
+        "dbinfo"
     ])
 )
 async def auto_add_user(client, message):
@@ -1371,6 +1503,11 @@ async def index_back_callback(client, query):
 # FORCE SUB CALLBACK
 # ------------------------- #
 
+    # ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 @app.on_callback_query(filters.regex("checksub"))
 async def checksub_callback(client, query):
 
@@ -1632,10 +1769,6 @@ async def get_id(client, message):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-# ------------------------- #
-# SYSTEM COMMAND
-# ------------------------- #
-
 @app.on_message(filters.command("system"))
 async def system_info(client, message):
 
@@ -1672,6 +1805,766 @@ async def system_info(client, message):
         photo="https://graph.org/file/3999f429ad9b0b1317f28-7591e7676c147975c9.jpg",
         caption=text
     )
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("restart") & filters.private)
+async def restart_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "🚫 <b>You are not authorized to use this command.</b>"
+        )
+
+    text = (
+        "<blockquote>🔄 <b>BOT RESTART</b></blockquote>\n\n"
+        "• <b>Status:</b> Restarting Bot...\n"
+        "• <b>Please wait:</b> 5–10 Seconds\n\n"
+        "<blockquote>⚡ All services will automatically reconnect after restart.</blockquote>"
+    )
+
+    await message.reply_photo(
+        photo="https://graph.org/file/14c3a336058422b14549d-85d887f6fd8a9cead5.jpg",
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]]
+        )
+    )
+
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("clearcache") & filters.private)
+async def clear_cache(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "**🚫 You are not authorized to use this command.**"
+        )
+
+    # Clear Python garbage
+    collected = gc.collect()
+
+    # Clear your custom caches here (if they exist)
+    try:
+        INDEX_CACHE.clear()
+    except:
+        pass
+
+    try:
+        BATCH_USERS.clear()
+    except:
+        pass
+
+    text = (
+        "<blockquote><b>🗑 CACHE CLEANED SUCCESSFULLY</b></blockquote>\n\n"
+        f"🧹 <b>Garbage Objects Collected:</b> <code>{collected}</code>\n"
+        "📦 <b>Memory Cache:</b> Cleared ✅\n"
+        "⚡ <b>Bot Performance:</b> **Optimized**\n\n"
+        "<blockquote>"
+        "The temporary cache has been removed.\n"
+        "The bot is now running with a fresh cache."
+        "</blockquote>"
+    )
+
+    await message.reply_photo(
+        photo="https://graph.org/file/82399e44509fe3e309f1a-c643c16f816cfb8273.jpg",  # Change to your image
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("fileinfo") & filters.private)
+async def fileinfo(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    if not message.reply_to_message:
+        return await message.reply_text(
+            "❌ Reply to a file with <code>/fileinfo</code>"
+        )
+
+    media = (
+        message.reply_to_message.document
+        or message.reply_to_message.video
+        or message.reply_to_message.audio
+        or message.reply_to_message.photo
+        or message.reply_to_message.animation
+        or message.reply_to_message.voice
+        or message.reply_to_message.video_note
+    )
+
+    if not media:
+        return await message.reply_text(
+            "❌ Reply to a valid media file."
+        )
+
+    size = media.file_size or 0
+
+    if size >= 1024**3:
+        size_text = f"{size/(1024**3):.2f} GB"
+    else:
+        size_text = f"{size/(1024**2):.2f} MB"
+
+    caption = message.reply_to_message.caption or "No Caption"
+
+    text = f"""
+<blockquote><b>📄 FILE INFORMATION</b></blockquote>
+
+📁 <b>File Name</b> <code>{getattr(media, 'file_name', 'Unknown')}</code>
+📦 <b>File Size</b> <code>{size_text}</code>
+🏷 <b>File Type</b> <code>{media.__class__.__name__}</code>
+
+🆔 <b>File ID</b> <code>{media.file_id}</code>
+
+🔑 <b>Unique ID</b> <code>{media.file_unique_id}</code>
+
+👤 <b>Uploader ID</b> <code>{message.reply_to_message.from_user.id if message.reply_to_message.from_user else 'Unknown'}</code>
+📝 <b>Caption</b> <code>{caption}</code>
+<blockquote>
+✅ File information retrieved successfully.
+</blockquote>
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/8823f724144e44ba40b4f-a6a7bc3ab6bcbe6912.jpg",  # Replace with your image
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]]
+        )
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+PRIVACY_TEXT = """
+<blockquote><b>🔒 PRIVACY POLICY</b></blockquote>
+
+Your privacy is important to us.
+
+<b>📂 Data We Store</b>
+• Telegram User ID
+• Uploaded File IDs
+• File Names & Captions
+• Force Subscribe Status
+• Download Statistics
+
+<b>❌ Data We Never Store</b>
+• Passwords
+• Phone Numbers
+• Private Chats
+• Payment Information
+
+<b>🔐 Security</b>
+All data is stored securely inside the bot database and is never shared with third parties.
+"""
+
+@app.on_message(filters.command("privacy") & filters.private)
+async def privacy_command(client, message):
+
+    await message.reply_photo(
+        photo="https://graph.org/file/aa75d86b96cc9de2febbb-8100e96d3a0dfcc88b.jpg",
+        caption=PRIVACY_TEXT,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+    
+@app.on_message(filters.command("version") & filters.private)
+async def version_cmd(client, message):
+
+    caption = f"""
+<blockquote><b>🚀 BOT VERSION INFORMATION</b></blockquote>
+
+🤖 <b>Bot Version</b> <code>{BOT_VERSION}</code>
+🐍 <b>Python</b> <code>3.11.15</code>
+⚡ <b>Pyrogram</b> <code>2.0.106</code>
+🗄 <b>Database</b> <code>MongoDB Atlas</code>
+🌐 <b>Hosting</b> <code>Render Web Service</code>
+👨‍💻 <b>Developer</b> <a href="https://t.me/Mr_Mohammed_29">Mohammed</a>
+📢 <b>Updates Channel</b> <a href="https://t.me/Aero_Unity">Aero Unity</a>
+💬 <b>Support Group</b> <a href="https://t.me/+KWvhNb8kkmExNDc1">Discussion</a>
+🌟 <b>GitHub</b> <a href="https://github.com/MohammedDev-yt">Mohammed Dev</a>
+
+<blockquote>
+✅ Running the latest premium build with enhanced performance and stability.
+</blockquote>
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/c658f88f509dd0c786ac5-44bdf2692f1ca00b29.jpg",
+        caption=caption,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("support") & filters.private)
+async def support_cmd(client, message):
+
+    caption = """
+<blockquote><b>🛠 SUPPORT CENTER</b></blockquote>
+
+• Bot Issues
+• Database Problems
+• Force Subscribe Help
+• Deployment Support
+• Feature Requests
+• Bug Reports
+
+<blockquote>
+📨 Response time is usually within a few hours.
+Please describe your issue clearly when asking for help.
+</blockquote>
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/ffdbc01d09855874311b1-5f3f1eae52d984db3d.jpg",
+        caption=caption,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴅᴇᴠᴇʟᴏᴘᴇʀ •",
+                        url="https://t.me/Mr_Mohammed_29"
+                    ),
+                    InlineKeyboardButton(
+                        "• Support •",
+                        url="https://t.me/+KWvhNb8kkmExNDc1"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        "• ᴜᴘᴅᴀᴛᴇs •",
+                        url="https://t.me/Aero_Unity"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("storage") & filters.private)
+async def storage_cmd(client, message):
+
+    storage = await storage_used()
+    total = await total_files()
+
+    kb = storage / 1024
+    mb = storage / (1024 ** 2)
+    gb = storage / (1024 ** 3)
+    tb = storage / (1024 ** 4)
+
+    caption = f"""
+<blockquote><b>💾 STORAGE INFORMATION</b></blockquote>
+
+📂 <b>Total Files :</b> <code>{total:,}</code>
+💽 <b>Bytes :</b> <code>{storage:,} B</code>
+📀 <b>Kilobytes :</b> <code>{kb:.2f} KB</code>
+📦 <b>Megabytes :</b> <code>{mb:.2f} MB</code>
+🗄 <b>Gigabytes :</b> <code>{gb:.2f} GB</code>
+☁️ <b>Terabytes :</b> <code>{tb:.4f} TB</code>
+<blockquote>
+✅ Database Storage Calculated Successfully
+</blockquote>
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/61d73191fab95f9beab61-3e43b0219ea4150b8c.jpg",  # Replace with your image
+        caption=caption,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("backupdb") & filters.private)
+async def backup_database(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    msg = await message.reply_photo(
+        photo="https://graph.org/file/f66be4faa4d6b5532dec4-63ae8e6c8ba2f306e3.jpg",  # Backup Image
+        caption="""
+<blockquote>💾 <b>DATABASE BACKUP</b></blockquote>
+
+⏳ <b>Creating database backup...</b>
+""",
+    )
+
+    try:
+
+        backup_file = await export_database("database_backup.json")
+
+        await message.reply_document(
+            document=backup_file,
+            file_name="@Aero_Unity_Database_Backup.json",
+            caption=f"""
+<blockquote>✅ <b>DATABASE BACKUP COMPLETED</b></blockquote>
+📂 <b>Backup File :</b> <code>AU_Database_Backup.json</code>
+🗃 <b>Status :</b> Successfully Exported
+⚠️ <b>This backup contains all MongoDB collections only.</b>
+""",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+        await msg.delete()
+
+    except Exception as e:
+
+        await msg.edit_caption(
+            f"""
+<blockquote>❌ <b>BACKUP FAILED</b></blockquote><code>{e}</code>
+"""
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("restoredb") & filters.private)
+async def restore_database_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    if not message.reply_to_message or not message.reply_to_message.document:
+        return await message.reply_photo(
+            photo="https://graph.org/file/f66be4faa4d6b5532dec4-63ae8e6c8ba2f306e3.jpg",
+            caption=(
+                "<blockquote>♻️ <b>Database Restore</b></blockquote>\n\n"
+                "Reply to a <code>backup.json</code> file with:\n\n"
+                "<code>/restoredb</code>"
+            ),
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]
+            ])
+        )
+
+    status = await message.reply_photo(
+        photo=ADMIN_IMAGE,
+        caption=(
+            "<blockquote>⏳ Restoring Database...</blockquote>\n\n"
+            "Please wait..."
+        )
+    )
+
+    file_path = await message.reply_to_message.download()
+
+    try:
+        success = await import_database(file_path)
+
+        if success:
+            await status.edit_caption(
+                caption=(
+                    "<blockquote>✅ Database Restored Successfully</blockquote>\n\n"
+                    "All collections have been restored from the uploaded backup."
+                ),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]
+                ])
+            )
+        else:
+            await status.edit_caption(
+                caption=(
+                    "<blockquote>❌ Restore Failed</blockquote>\n\n"
+                    "Invalid or corrupted backup file."
+                ),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]
+                ])
+            )
+
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("cleanup") & filters.private)
+async def cleanup_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    status = await message.reply_photo(
+        photo="https://graph.org/file/85aeb98b0b394a2a29759-367cf355206fa8ef47.jpg",
+        caption="""
+<blockquote><b>🧹 SYSTEM CLEANUP</b></blockquote>
+
+⏳ Cleaning temporary data...
+• Please Wait a sec.....
+"""
+    )
+
+    verify_deleted = 0
+    temp_deleted = 0
+
+    # Clear Verify Cache
+    result = await verify_db.delete_many({})
+    verify_deleted = result.deleted_count
+
+    # Remove temp folders/files
+    temp_dirs = [
+        "downloads",
+        "temp",
+        "cache"
+    ]
+
+    for folder in temp_dirs:
+
+        if os.path.exists(folder):
+
+            for file in os.listdir(folder):
+
+                path = os.path.join(folder, file)
+
+                try:
+
+                    if os.path.isfile(path):
+                        os.remove(path)
+                        temp_deleted += 1
+
+                    elif os.path.isdir(path):
+                        shutil.rmtree(path)
+                        temp_deleted += 1
+
+                except:
+                    pass
+
+    await status.edit_caption(
+        caption=f"""
+<blockquote><b>✅ CLEANUP COMPLETED</b></blockquote>
+
+🧹 <b>Verify Cache Cleared</b> : <code>{verify_deleted}</code>
+🗂 <b>Temporary Files Removed</b> : <code>{temp_deleted}</code>
+💾 <b>Database Files</b> : <code>Safe</code>
+👥 <b>Users</b> : <code>Safe</code>
+📂 <b>Stored Files</b> : <code>Safe</code>
+<blockquote>
+System cleanup completed successfully.
+</blockquote>
+""",
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("analysis") & filters.private)
+async def analysis_cmd(client, message):
+
+    users = await total_users()
+    files = await total_files()
+    admins = await total_admins()
+    today = await today_files()
+    week = await week_files()
+    storage = await storage_used()
+
+    cpu = psutil.cpu_percent(interval=1)
+    ram = psutil.virtual_memory()
+    disk = shutil.disk_usage("/")
+
+    uptime = int(time.time() - START_TIME)
+
+    h = uptime // 3600
+    m = (uptime % 3600) // 60
+    s = uptime % 60
+
+    text = f"""
+<blockquote><b>📊 BOT ANALYSIS REPORT</b></blockquote>
+
+<b>👥 Users :</b> <code>{users:,}</code>
+<b>📂 Files :</b> <code>{files:,}</code>
+<b>👮 Admins :</b> <code>{admins}</code>
+<b>📅 Today's Uploads :</b> <code>{today}</code>
+<b>🗓 This Week :</b> <code>{week}</code>
+<b>💾 Stored Data :</b> <code>{format_size(storage)}</code>
+<b>⚙ CPU Usage :</b> <code>{cpu}%</code>
+<b>🧠 RAM :</b> <code>{format_size(ram.used)} / {format_size(ram.total)}</code>
+<b>💽 Disk :</b> <code>{format_size(disk.used)} / {format_size(disk.total)}</code>
+<b>🐍 Python :</b> <code>{platform.python_version()}</code>
+<b>🤖 Pyrogram :</b> <code>2.0.106</code>
+<b>🖥 Platform :</b> <code>{platform.system()} {platform.release()}</code>
+<b>⏳ Uptime :</b> <code>{h}h {m}m {s}s</code>
+<b>Status :</b> ✅ Healthy
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/acd6215d3f851eb72a772-4a988e1a662a3c1693.jpg",
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("speedtest") & filters.private)
+async def speedtest_cmd(client, message):
+
+    msg = await message.reply_text(
+        "⚡ Running internet speed test...\n"
+        "This may take a 10-20 sec..."
+    )
+
+    try:
+        start = time.time()
+
+        st = speedtest.Speedtest()
+
+        st.get_best_server()
+
+        download = st.download() / 1024 / 1024
+        upload = st.upload() / 1024 / 1024
+
+        ping = st.results.ping
+
+        elapsed = round(time.time() - start, 2)
+
+        await msg.delete()
+
+        caption = f"""
+<blockquote><b>⚡ SPEED TEST RESULT</b></blockquote>
+
+📡 <b>Server :</b> <code>{st.results.server['sponsor']}</code>
+🌍 <b>Country :</b> <code>{st.results.server['country']}</code>
+📥 <b>Download :</b> <code>{download:.2f} Mbps</code>
+📤 <b>Upload :</b> <code>{upload:.2f} Mbps</code>
+📶 <b>Ping :</b> <code>{ping:.2f} ms</code>
+⏱ <b>Time Taken :</b> <code>{elapsed} sec</code>
+
+• <b>Network Speed Test Completed.</b>
+"""
+
+        await message.reply_photo(
+            photo="https://graph.org/file/24b1d71722e3272349f71-dc01805818fa2e8c67.jpg",
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+    except Exception as e:
+        await msg.edit(
+            f"❌ Speed test failed.\n\n<code>{e}</code>"
+        )
+        
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("filestats") & filters.private)
+async def file_stats_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return
+
+    total_files = await files.count_documents({})
+
+    videos = await files.count_documents(
+        {"file_type": "video"}
+    )
+
+    documents = await files.count_documents(
+        {"file_type": "document"}
+    )
+
+    audios = await files.count_documents(
+        {"file_type": "audio"}
+    )
+
+    photos = await files.count_documents(
+        {"file_type": "photo"}
+    )
+
+    others = total_files - (
+        videos +
+        documents +
+        audios +
+        photos
+    )
+
+    total_size = 0
+    total_downloads = 0
+
+    async for file in files.find(
+        {},
+        {
+            "file_size": 1,
+            "download_count": 1
+        }
+    ):
+        total_size += file.get("file_size", 0)
+        total_downloads += file.get("download_count", 0)
+
+    gb = total_size / (1024 ** 3)
+
+    caption = f"""
+<blockquote><b>📂 FILE STATISTICS</b></blockquote>
+
+📦 <b>Total Files</b> : <code>{total_files:,}</code>
+🎬 <b>Videos</b> : <code>{videos:,}</code>
+📄 <b>Documents</b> : <code>{documents:,}</code>
+🎵 <b>Audios</b> : <code>{audios:,}</code>
+🖼 <b>Photos</b> : <code>{photos:,}</code>
+📁 <b>Others</b> : <code>{others:,}</code>
+💾 <b>Total Storage</b> : <code>{gb:.2f} GB</code>
+📥 <b>Total Downloads</b> : <code>{total_downloads:,}</code>
+<b>Status :</b> <code>Healthy ✅</code>
+"""
+
+    await message.reply_photo(
+        photo="https://graph.org/file/76121727251931b1c5ef0-2f318b71367ab9951f.jpg",
+        caption=caption,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "• ᴄʟᴏsᴇ •",
+                        callback_data="close"
+                    )
+                ]
+            ]
+        )
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("dbinfo"))
+async def dbinfo_cmd(client, message):
+    
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "> ❌ You are not authorized to use this command."
+        )
+
+    total_files = await files.count_documents({})
+    total_users = await users.count_documents({})
+
+    await message.reply_text(
+        f"> **🗄 Database Info**\n\n"
+        f"> **📁 Total Files : `{total_files}`**\n"
+        f"> **🔗 Database : [MongoDB](https://www.mongodb.com/) ✅**\n"
+        f"> **🤖 Bot : [File Store Bot](https://t.me/{client.me.username})**",
+        disable_web_page_preview=True,
+        quote=True
+    )
+
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
