@@ -80,6 +80,7 @@
 - 🔗 Instant Shareable File Links
 - 🎨 Premium Command UI
 - 🖥️ 24/7 Uptime Support
+
 📂 Supported Media Types
 
 - 🎥 Videos
