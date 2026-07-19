@@ -44,6 +44,8 @@ CHANNEL_ID = int(must_get("CHANNEL_ID"))
 
 OWNER_ID = int(must_get("OWNER_ID"))
 
+LOG_CHANNEL = int(must_get("LOG_CHANNEL"))
+
 PORT = int(os.getenv("PORT", "10000"))
 
 # ------------------------- #
