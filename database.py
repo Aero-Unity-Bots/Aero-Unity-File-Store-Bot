@@ -5,8 +5,12 @@
 # ------------------------- #
 
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import DESCENDING
 from config import MONGO_URI
 from datetime import datetime
+import json
+import os
+import time
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -28,16 +32,33 @@ banned = db["banned"]
 # ------------------------- #
 
 # FILES
-async def save_file(file_id, file_unique_id, file_type, caption, thumb=None):
+async def save_file(
+    file_id,
+    file_unique_id,
+    file_type,
+    caption="",
+    thumb=None,
+    file_name="",
+    file_size=0,
+    uploader_id=0
+):
+
+    data = {
+        "file_id": file_id,
+        "file_unique_id": file_unique_id,
+        "file_type": file_type,
+        "caption": caption,
+        "thumb": thumb,
+        "file_name": file_name,
+        "file_size": file_size,
+        "uploader_id": uploader_id,
+        "upload_time": int(time.time()),
+        "download_count": 0
+    }
+
     await files.update_one(
         {"file_unique_id": file_unique_id},
-        {"$set": {
-            "file_id": file_id,
-            "file_unique_id": file_unique_id,
-            "file_type": file_type,
-            "caption": caption,
-            "thumb": thumb
-        }},
+        {"$set": data},
         upsert=True
     )
     
@@ -129,7 +150,9 @@ async def remove_admin_db(user_id):
 
 async def is_admin(user_id):
     return await admins.find_one({"user_id": int(user_id)}) is not None
-    
+
+async def total_admins():
+    return await admins.count_documents({})
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
@@ -255,3 +278,204 @@ async def get_banned_users():
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
+# ------------------------- #
+# FILE MANAGEMENT
+# ------------------------- #
+
+async def get_file_by_unique_id(file_unique_id):
+    return await files.find_one(
+        {"file_unique_id": file_unique_id}
+    )
+
+async def total_files():
+    return await files.count_documents({})
+
+# ------------------------- #
+# DOWNLOAD COUNT
+# ------------------------- #
+
+async def increase_download(file_unique_id):
+
+    await files.update_one(
+        {"file_unique_id": file_unique_id},
+        {
+            "$inc": {
+                "download_count": 1
+            }
+        }
+    )
+
+
+# ------------------------- #
+# TODAY FILES
+# ------------------------- #
+
+async def today_files():
+
+    now = int(time.time())
+
+    start = now - 86400
+
+    return await files.count_documents(
+        {
+            "upload_time": {
+                "$gte": start
+            }
+        }
+    )
+
+
+# ------------------------- #
+# WEEK FILES
+# ------------------------- #
+
+async def week_files():
+
+    now = int(time.time())
+
+    start = now - (7 * 86400)
+
+    return await files.count_documents(
+        {
+            "upload_time": {
+                "$gte": start
+            }
+        }
+    )
+
+
+# ------------------------- #
+# STORAGE
+# ------------------------- #
+
+async def storage_used():
+
+    total = 0
+
+    async for file in files.find():
+
+        total += file.get("file_size", 0)
+
+    return total
+
+
+# ------------------------- #
+# TOP USERS
+# ------------------------- #
+
+async def top_uploaders(limit=10):
+
+    pipeline = [
+
+        {
+            "$group": {
+                "_id": "$uploader_id",
+                "uploads": {
+                    "$sum": 1
+                }
+            }
+        },
+
+        {
+            "$sort": {
+                "uploads": -1
+            }
+        },
+
+        {
+            "$limit": limit
+        }
+
+    ]
+
+    return await files.aggregate(
+        pipeline
+    ).to_list(length=limit)
+
+# ------------------------- #
+# DATABASE BACKUP
+# ------------------------- #
+
+COLLECTIONS = {
+    "files": files,
+    "users": users,
+    "admins": admins,
+    "forcesubs": forcesubs,
+    "verify_cache": verify_db,
+    "banned": banned
+}
+
+
+async def export_database(filepath="backup.json"):
+
+    backup = {}
+
+    for name, collection in COLLECTIONS.items():
+
+        backup[name] = []
+
+        async for document in collection.find():
+
+            document["_id"] = str(document["_id"])
+
+            backup[name].append(document)
+
+    with open(filepath, "w", encoding="utf-8") as f:
+
+        json.dump(
+            backup,
+            f,
+            indent=4,
+            ensure_ascii=False
+        )
+
+    return filepath
+
+
+# ------------------------- #
+# DATABASE RESTORE
+# ------------------------- #
+
+async def import_database(filepath):
+
+    if not os.path.exists(filepath):
+        return False
+
+    with open(filepath, "r", encoding="utf-8") as f:
+
+        backup = json.load(f)
+
+    for name, collection in COLLECTIONS.items():
+
+        await collection.delete_many({})
+
+        if name not in backup:
+            continue
+
+        docs = backup[name]
+
+        for doc in docs:
+
+            doc.pop("_id", None)
+
+        if docs:
+
+            await collection.insert_many(docs)
+
+    return True
+
+
+# ------------------------- #
+# DATABASE INFORMATION
+# ------------------------- #
+
+async def database_info():
+
+    info = {}
+
+    for name, collection in COLLECTIONS.items():
+
+        info[name] = await collection.count_documents({})
+
+    return info
