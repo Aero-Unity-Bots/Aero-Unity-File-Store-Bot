@@ -1,3 +1,4 @@
+
 # ------------------------- #
 # Don't Remove Credit 
 # Ask Doubt @AU_Bot_Discussion 
@@ -5,20 +6,25 @@
 # ------------------------- #
 
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from config import *
 from pyrogram.types import InputMediaPhoto
 from pyrogram.enums import ParseMode, ChatMemberStatus
 from pyrogram.errors import FloodWait, UserNotParticipant
+from pymediainfo import MediaInfo
+from telegraph import Telegraph
 
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
+import tempfile
 import io
 import shutil 
 from contextlib import redirect_stdout, redirect_stderr
 from pymongo import DESCENDING
+from deep_translator import GoogleTranslator
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -30,6 +36,7 @@ import sys
 import platform
 import random
 import psutil
+import math
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -42,6 +49,87 @@ import asyncio
 import traceback
 import speedtest
 import logging
+import pytz
+import syncedlyrics
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+telegraph = Telegraph()
+telegraph.create_account(short_name="MediaInfoBot")
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+def upload_to_telegraph(title, html):
+    page = telegraph.create_page(
+        title=title,
+        html_content=html
+    )
+    return "https://telegra.ph/" + page["path"]
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+LYRICS_CACHE = {}
+MAX_CHARS = 3500
+TIMEZONE = "Asia/Kolkata"
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+def split_lyrics(text, size=MAX_CHARS):
+    pages = []
+    while len(text) > size:
+        cut = text.rfind("\n", 0, size)
+        if cut == -1:
+            cut = size
+        pages.append(text[:cut])
+        text = text[cut:].strip()
+    if text:
+        pages.append(text)
+    return pages
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+def get_lyrics(song_name):
+    """
+    Fetch lyrics in the original language.
+    """
+    try:
+        lyrics = syncedlyrics.search(song_name)
+
+        if not lyrics:
+            return None
+
+        # Remove timestamps if present
+        clean = []
+        for line in lyrics.splitlines():
+            if "] " in line:
+                line = line.split("] ", 1)[1]
+            clean.append(line)
+
+        return "\n".join(clean).strip()
+
+    except Exception:
+        return None
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 logging.basicConfig(level=logging.INFO)
 
 # ------------------------- #
@@ -92,7 +180,23 @@ from database import (
     top_uploaders,
     export_database,
     database_info,
-    import_database
+    import_database,
+    add_database,
+    get_all_databases,
+    remove_database as remove_saved_db,
+    set_active_database
+)
+
+from multidb import (
+    load_database,
+    total_databases,
+    remove_database as remove_loaded_db,
+    has_database,
+    database_list,
+    get_active_database,
+    switch_database,
+    database_status,
+    get_active_database
 )
 
 # ------------------------- #
@@ -261,19 +365,22 @@ async def batch_command(client, message):
         "id",
         "system", 
         "restart",
-        "clearcache",
-        "fileinfo",
         "privacy",
         "version",
         "support",
         "storage",
         "backupdb",
         "restoredb",
-        "cleanup",
-        "analysis",
         "speedtest",
         "filestats",
-        "dbinfo"
+        "adddb",
+        "removedb",
+        "dblist",
+        "dbstatus",
+        "ip",
+        "lyrics",
+        "translate",
+        "mediainfo"
     ])
 )
 async def handle_batch(client, message):
@@ -925,19 +1032,23 @@ async def broadcast(client, message: Message):
         "id",
         "system",
         "restart",
-        "clearcache",
-        "fileinfo",
         "privacy",
         "version",
         "support",
         "storage",
         "backupdb",
         "restoredb",
-        "cleanup",
-        "analysis",
         "speedtest",
         "filestats",
-        "dbinfo"
+        "adddb",
+        "removedb",
+        "dblist",
+        "dbstatus",
+        "ip",
+        "lyrics",
+        "translate",
+        "mediainfo"
+        
     ])
 )
 async def auto_add_user(client, message):
@@ -1840,125 +1951,6 @@ async def restart_cmd(client, message):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-@app.on_message(filters.command("clearcache") & filters.private)
-async def clear_cache(client, message):
-
-    if message.from_user.id != OWNER_ID:
-        return await message.reply_text(
-            "**🚫 You are not authorized to use this command.**"
-        )
-
-    # Clear Python garbage
-    collected = gc.collect()
-
-    # Clear your custom caches here (if they exist)
-    try:
-        INDEX_CACHE.clear()
-    except:
-        pass
-
-    try:
-        BATCH_USERS.clear()
-    except:
-        pass
-
-    text = (
-        "<blockquote><b>🗑 CACHE CLEANED SUCCESSFULLY</b></blockquote>\n\n"
-        f"🧹 <b>Garbage Objects Collected:</b> <code>{collected}</code>\n"
-        "📦 <b>Memory Cache:</b> Cleared ✅\n"
-        "⚡ <b>Bot Performance:</b> **Optimized**\n\n"
-        "<blockquote>"
-        "The temporary cache has been removed.\n"
-        "The bot is now running with a fresh cache."
-        "</blockquote>"
-    )
-
-    await message.reply_photo(
-        photo="https://graph.org/file/82399e44509fe3e309f1a-c643c16f816cfb8273.jpg",  # Change to your image
-        caption=text,
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "• ᴄʟᴏsᴇ •",
-                        callback_data="close"
-                    )
-                ]
-            ]
-        )
-    )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
-@app.on_message(filters.command("fileinfo") & filters.private)
-async def fileinfo(client, message):
-
-    if message.from_user.id != OWNER_ID:
-        return
-
-    if not message.reply_to_message:
-        return await message.reply_text(
-            "❌ Reply to a file with <code>/fileinfo</code>"
-        )
-
-    media = (
-        message.reply_to_message.document
-        or message.reply_to_message.video
-        or message.reply_to_message.audio
-        or message.reply_to_message.photo
-        or message.reply_to_message.animation
-        or message.reply_to_message.voice
-        or message.reply_to_message.video_note
-    )
-
-    if not media:
-        return await message.reply_text(
-            "❌ Reply to a valid media file."
-        )
-
-    size = media.file_size or 0
-
-    if size >= 1024**3:
-        size_text = f"{size/(1024**3):.2f} GB"
-    else:
-        size_text = f"{size/(1024**2):.2f} MB"
-
-    caption = message.reply_to_message.caption or "No Caption"
-
-    text = f"""
-<blockquote><b>📄 FILE INFORMATION</b></blockquote>
-
-📁 <b>File Name</b> <code>{getattr(media, 'file_name', 'Unknown')}</code>
-📦 <b>File Size</b> <code>{size_text}</code>
-🏷 <b>File Type</b> <code>{media.__class__.__name__}</code>
-
-🆔 <b>File ID</b> <code>{media.file_id}</code>
-
-🔑 <b>Unique ID</b> <code>{media.file_unique_id}</code>
-
-👤 <b>Uploader ID</b> <code>{message.reply_to_message.from_user.id if message.reply_to_message.from_user else 'Unknown'}</code>
-📝 <b>Caption</b> <code>{caption}</code>
-<blockquote>
-✅ File information retrieved successfully.
-</blockquote>
-"""
-
-    await message.reply_photo(
-        photo="https://graph.org/file/8823f724144e44ba40b4f-a6a7bc3ab6bcbe6912.jpg",  # Replace with your image
-        caption=text,
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")]]
-        )
-    )
-    
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
 PRIVACY_TEXT = """
 <blockquote><b>🔒 PRIVACY POLICY</b></blockquote>
 
@@ -2263,146 +2255,6 @@ async def restore_database_cmd(client, message):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-@app.on_message(filters.command("cleanup") & filters.private)
-async def cleanup_cmd(client, message):
-
-    if message.from_user.id != OWNER_ID:
-        return
-
-    status = await message.reply_photo(
-        photo="https://graph.org/file/85aeb98b0b394a2a29759-367cf355206fa8ef47.jpg",
-        caption="""
-<blockquote><b>🧹 SYSTEM CLEANUP</b></blockquote>
-
-⏳ Cleaning temporary data...
-• Please Wait a sec.....
-"""
-    )
-
-    verify_deleted = 0
-    temp_deleted = 0
-
-    # Clear Verify Cache
-    result = await verify_db.delete_many({})
-    verify_deleted = result.deleted_count
-
-    # Remove temp folders/files
-    temp_dirs = [
-        "downloads",
-        "temp",
-        "cache"
-    ]
-
-    for folder in temp_dirs:
-
-        if os.path.exists(folder):
-
-            for file in os.listdir(folder):
-
-                path = os.path.join(folder, file)
-
-                try:
-
-                    if os.path.isfile(path):
-                        os.remove(path)
-                        temp_deleted += 1
-
-                    elif os.path.isdir(path):
-                        shutil.rmtree(path)
-                        temp_deleted += 1
-
-                except:
-                    pass
-
-    await status.edit_caption(
-        caption=f"""
-<blockquote><b>✅ CLEANUP COMPLETED</b></blockquote>
-
-🧹 <b>Verify Cache Cleared</b> : <code>{verify_deleted}</code>
-🗂 <b>Temporary Files Removed</b> : <code>{temp_deleted}</code>
-💾 <b>Database Files</b> : <code>Safe</code>
-👥 <b>Users</b> : <code>Safe</code>
-📂 <b>Stored Files</b> : <code>Safe</code>
-<blockquote>
-System cleanup completed successfully.
-</blockquote>
-""",
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "• ᴄʟᴏsᴇ •",
-                        callback_data="close"
-                    )
-                ]
-            ]
-        )
-    )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
-@app.on_message(filters.command("analysis") & filters.private)
-async def analysis_cmd(client, message):
-
-    users = await total_users()
-    files = await total_files()
-    admins = await total_admins()
-    today = await today_files()
-    week = await week_files()
-    storage = await storage_used()
-
-    cpu = psutil.cpu_percent(interval=1)
-    ram = psutil.virtual_memory()
-    disk = shutil.disk_usage("/")
-
-    uptime = int(time.time() - START_TIME)
-
-    h = uptime // 3600
-    m = (uptime % 3600) // 60
-    s = uptime % 60
-
-    text = f"""
-<blockquote><b>📊 BOT ANALYSIS REPORT</b></blockquote>
-
-<b>👥 Users :</b> <code>{users:,}</code>
-<b>📂 Files :</b> <code>{files:,}</code>
-<b>👮 Admins :</b> <code>{admins}</code>
-<b>📅 Today's Uploads :</b> <code>{today}</code>
-<b>🗓 This Week :</b> <code>{week}</code>
-<b>💾 Stored Data :</b> <code>{format_size(storage)}</code>
-<b>⚙ CPU Usage :</b> <code>{cpu}%</code>
-<b>🧠 RAM :</b> <code>{format_size(ram.used)} / {format_size(ram.total)}</code>
-<b>💽 Disk :</b> <code>{format_size(disk.used)} / {format_size(disk.total)}</code>
-<b>🐍 Python :</b> <code>{platform.python_version()}</code>
-<b>🤖 Pyrogram :</b> <code>2.0.106</code>
-<b>🖥 Platform :</b> <code>{platform.system()} {platform.release()}</code>
-<b>⏳ Uptime :</b> <code>{h}h {m}m {s}s</code>
-<b>Status :</b> ✅ Healthy
-"""
-
-    await message.reply_photo(
-        photo="https://graph.org/file/acd6215d3f851eb72a772-4a988e1a662a3c1693.jpg",
-        caption=text,
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "• ᴄʟᴏsᴇ •",
-                        callback_data="close"
-                    )
-                ]
-            ]
-        )
-    )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
 @app.on_message(filters.command("speedtest") & filters.private)
 async def speedtest_cmd(client, message):
 
@@ -2539,36 +2391,707 @@ async def file_stats_cmd(client, message):
             ]
         )
     )
-    
+
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-@app.on_message(filters.command("dbinfo"))
-async def dbinfo_cmd(client, message):
-    
+@app.on_message(filters.command("adddb") & filters.private)
+async def adddb_cmd(client, message):
+
     if message.from_user.id != OWNER_ID:
         return await message.reply_text(
-            "> ❌ You are not authorized to use this command."
+            "🚫 <b>You are not authorized to use this command.</b>"
         )
 
-    total_files = await files.count_documents({})
-    total_users = await users.count_documents({})
+    if len(message.command) < 3:
+        return await message.reply_text(
+            "<b>Usage:</b>\n"
+            "<code>/adddb DatabaseName mongodb+srv://.....</code>"
+        )
+
+    if total_databases() >= 5:
+        return await message.reply_text(
+            "❌ <b>Maximum 5 databases are allowed.</b>"
+        )
+
+    name = message.command[1]
+
+    uri = message.text.split(None, 2)[2]
+
+    dbs = await get_all_databases()
+
+    for db in dbs:
+
+        if db["name"].lower() == name.lower():
+
+            return await message.reply_text(
+                "⚠️ <b>Database name already exists.</b>"
+            )
+
+    wait = await message.reply_text(
+        "🔄 <b>Connecting to MongoDB...</b>"
+    )
+
+    try:
+
+        await load_database(uri, name)
+
+        await add_database(name, uri)
+
+        await wait.delete()
+
+        await message.reply_photo(
+            photo="https://graph.org/file/cb707ebcf6e087d4a49c6-ce0dbf8bc97b6dd50b.jpg",
+            caption=f"""
+<blockquote><b>✅ DATABASE CONNECTED AND ADDED</b></blockquote>
+
+🗄 <b>Name</b> <code>{name}</code>
+📊 <b>Status</b> Connected Successfully
+
+<blockquote><b>🔄 It will automatically reconnect after every bot restart.</b></blockquote>
+""",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+    except Exception as e:
+
+        await wait.edit(
+            f"❌ <b>Connection Failed</b>\n\n<code>{e}</code>"
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("removedb") & filters.private)
+async def removedb_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "🚫 <b>You are not authorized to use this command.</b>"
+        )
+
+    if len(message.command) != 2:
+        return await message.reply_text(
+            "<b>Usage:</b>\n"
+            "<code>/removedb DatabaseName</code>"
+        )
+
+    db_name = message.command[1]
+
+    if not has_database(db_name):
+        return await message.reply_text(
+            "❌ <b>Database not found.</b>"
+        )
+
+    current = get_active_database()
+
+    wait = await message.reply_text(
+        "🗑 Removing database..."
+    )
+
+    try:
+
+        await remove_loaded_db(db_name)
+
+        await remove_saved_db(db_name)
+
+        dbs = database_list()
+
+        extra = ""
+
+        if current == db_name:
+
+            if dbs:
+
+                new_db = dbs[0]
+
+                switch_database(new_db)
+
+                await set_active_database(new_db)
+
+                extra = (
+                    f"\n\n⭐ <b>New Active Database :</b>\n"
+                    f"<code>{new_db}</code>"
+                )
+
+            else:
+
+                extra = "\n\n⚠️ No databases remaining."
+
+        await wait.delete()
+
+        await message.reply_photo(
+            photo="https://graph.org/file/cb707ebcf6e087d4a49c6-ce0dbf8bc97b6dd50b.jpg",
+            caption=f"""
+<blockquote><b>🗑 DATABASE REMOVED</b></blockquote>
+
+🗄 <b>Database :</b> <code>{db_name}</code>
+✅ Successfully removed. {extra}
+""",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+    except Exception as e:
+
+        await wait.edit(
+            f"❌ <b>Failed</b>\n\n<code>{e}</code>"
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("dblist") & filters.private)
+async def dblist_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "🚫 <b>You are not authorized to use this command.</b>"
+        )
+
+    wait = await message.reply_text(
+        "🔍 Fetching database list..."
+    )
+
+    try:
+
+        dbs = await database_status()
+
+        if not dbs:
+
+            await wait.edit(
+                "❌ <b>No databases found.</b>"
+            )
+
+            return
+
+        active = get_active_database()
+
+        online = 0
+        offline = 0
+
+        text = """
+<blockquote><b>🗄 DATABASE LIST</b></blockquote>
+
+"""
+
+        for i, db in enumerate(dbs, start=1):
+
+            if db["status"] == "ONLINE":
+
+                status = "🟢 ONLINE"
+
+                online += 1
+
+            else:
+
+                status = "🔴 OFFLINE"
+
+                offline += 1
+
+            current = ""
+
+            if db["name"] == active:
+
+                current = " ⭐ ACTIVE"
+
+            text += (
+                f"<b>{i}.</b> <code>{db['name']}</code>\n"
+                f"Status : {status}{current}\n\n"
+            )
+
+        text += f"""
+<blockquote>
+🟢 Online : {online}
+🔴 Offline : {offline}
+📦 Total Databases : {len(dbs)}/5
+</blockquote>
+"""
+
+        await wait.delete()
+
+        await message.reply_photo(
+            photo="https://graph.org/file/cb707ebcf6e087d4a49c6-ce0dbf8bc97b6dd50b.jpg",
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+    except Exception as e:
+
+        await wait.edit(
+            f"❌ <b>Error</b>\n\n<code>{e}</code>"
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("dbstatus") & filters.private)
+async def dbstatus_cmd(client, message):
+
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text(
+            "🚫 <b>You are not authorized to use this command.</b>"
+        )
+
+    wait = await message.reply_text(
+        "🔄 Checking database status..."
+    )
+
+    try:
+
+        dbs = await database_status()
+
+        if not dbs:
+            return await wait.edit(
+                "❌ No databases found."
+            )
+
+        active = get_active_database()
+
+        online = 0
+        offline = 0
+
+        caption = """
+<blockquote><b>🗄 DATABASE STATUS</b></blockquote>
+
+"""
+
+        for i, db in enumerate(dbs, start=1):
+
+            if db["status"] == "ONLINE":
+                status = "🟢 ONLINE"
+                online += 1
+            else:
+                status = "🔴 OFFLINE"
+                offline += 1
+
+            active_text = ""
+
+            if db["name"] == active:
+                active_text = " ⭐ ACTIVE"
+
+            caption += (
+                f"🗄 <b>Database {i}</b>\n"
+                f"├ <b>Name :</b> <code>{db['name']}</code>\n"
+                f"└ <b>Status :</b> {status}{active_text}\n\n"
+            )
+
+        caption += f"""
+<blockquote>
+🟢 Online : <code>{online}</code>
+🔴 Offline : <code>{offline}</code>
+📦 Total Databases : <code>{len(dbs)}/5</code>
+⭐ Active Database : <code>{active if active else 'None'}</code>
+</blockquote>
+
+✅ <b>Multi Database System Running Successfully.</b>
+"""
+
+        await wait.delete()
+
+        await message.reply_photo(
+            photo="https://graph.org/file/cb707ebcf6e087d4a49c6-ce0dbf8bc97b6dd50b.jpg",
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "• ᴄʟᴏsᴇ •",
+                            callback_data="close"
+                        )
+                    ]
+                ]
+            )
+        )
+
+    except Exception as e:
+
+        await wait.edit(
+            f"❌ <b>Error</b>\n\n<code>{e}</code>"
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("ip"))
+async def ip_lookup(client, message):
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "<blockquote expandable>"
+            "🌐 <b>IP Lookup</b>\n\n"
+            "<b>Usage:</b>"
+            "<code>/ip 8.8.8.8</code>\n\n"
+            "<b>Example:</b>"
+            "<code>/ip 1.1.1.1</code>"
+            "</blockquote>",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close_ip")]]
+            )
+        )
+
+    ip = message.command[1]
+
+    try:
+        data = requests.get(f"http://ip-api.com/json/{ip}").json()
+
+        if data["status"] != "success":
+            raise Exception()
+
+        text = f"""
+<blockquote expandable>
+🌐 <b>IP Information</b>
+
+🖥 <b>IP:</b> <code>{data['query']}</code>
+🌍 <b>Country:</b> {data['country']}
+📍 <b>Region:</b> {data['regionName']}
+🏙 <b>City:</b> {data['city']}
+📮 <b>ZIP:</b> {data['zip']}
+🛰 <b>ISP:</b> {data['isp']}
+🕒 <b>Timezone:</b> {data['timezone']}
+📡 <b>Latitude:</b> {data['lat']}
+📡 <b>Longitude:</b> {data['lon']}
+</blockquote>
+"""
+    except:
+        text = """
+<blockquote expandable>
+❌ <b>Invalid IP Address</b>
+
+• Please enter a valid IPv4 address.
+
+<b>Example:</b>
+<code>/ip 8.8.8.8</code>
+</blockquote>
+"""
 
     await message.reply_text(
-        f"> **🗄 Database Info**\n\n"
-        f"> **📁 Total Files : `{total_files}`**\n"
-        f"> **🔗 Database : [MongoDB](https://www.mongodb.com/) ✅**\n"
-        f"> **🤖 Bot : [File Store Bot](https://t.me/{client.me.username})**",
-        disable_web_page_preview=True,
-        quote=True
+        text,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close_ip")]]
+        )
     )
 
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
+
+@app.on_message(filters.command("lyrics"))
+async def lyrics_cmd(client, message):
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            """
+<blockquote expandable>
+
+🎵 <b>Lyrics Search</b>
+
+<b>Usage:</b>
+<code>/lyrics Believer</code>
+<code>/lyrics Sahiba</code>
+
+</blockquote>
+"""
+        )
+
+    query = " ".join(message.command[1:])
+
+    msg = await message.reply_text("🔍 Searching lyrics...")
+
+    lyrics = get_lyrics(query)
+
+    if not lyrics:
+        return await msg.edit(
+            """
+<blockquote expandable>
+
+❌ <b>Lyrics Not Found.</b>
+
+• Try another song name.
+
+</blockquote>
+"""
+        )
+
+    pages = split_lyrics(lyrics)
+
+    user_id = message.from_user.id
+
+    LYRICS_CACHE[user_id] = {
+        "pages": pages,
+        "song": query
+    }
+
+    text = f"""
+<blockquote expandable>
+
+🎵 <b>{query.title()}</b> 
+
+{pages[0]}
+
+</blockquote>
+
+<b>Page 1/{len(pages)}</b>
+"""
+
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="lyrics_close"),
+                InlineKeyboardButton("• ɴᴇxᴛ •", callback_data="lyrics_next_0")
+            ]
+        ]
+    )
+
+    await msg.edit(
+        text,
+        reply_markup=buttons
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_callback_query(filters.regex(r"^lyrics_(next|back|close)"))
+async def lyrics_buttons(client, query: CallbackQuery):
+
+    if query.data == "lyrics_close":
+        await query.message.delete()
+        return await query.answer()
+
+    user_id = query.from_user.id
+
+    if user_id not in LYRICS_CACHE:
+        return await query.answer("Lyrics expired!", show_alert=True)
+
+    data = LYRICS_CACHE[user_id]
+    pages = data["pages"]
+    song = data["song"]
+
+    page = int(query.data.split("_")[-1])
+
+    if "next" in query.data:
+        page += 1
+    elif "back" in query.data:
+        page -= 1
+
+    if page < 0:
+        page = 0
+
+    if page >= len(pages):
+        page = len(pages) - 1
+
+    text = f"""
+<blockquote expandable>
+
+🎵 <b>{song.title()}</b> 
+
+{pages[page]}
+
+</blockquote>
+
+<b>Page {page+1}/{len(pages)}</b>
+"""
+
+    buttons = []
+
+    row = []
+
+    if page > 0:
+        row.append(
+            InlineKeyboardButton(
+                "• ʙᴀᴄᴋ •",
+                callback_data=f"lyrics_back_{page}"
+            )
+        )
+
+    row.append(
+        InlineKeyboardButton(
+            "• ᴄʟᴏsᴇ •",
+            callback_data="lyrics_close"
+        )
+    )
+
+    if page < len(pages) - 1:
+        row.append(
+            InlineKeyboardButton(
+                "• ɴᴇxᴛ •",
+                callback_data=f"lyrics_next_{page}"
+            )
+        )
+
+    buttons.append(row)
+
+    await query.message.edit_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+    await query.answer()
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("translate"))
+async def translate_cmd(client, message):
+    if len(message.command) < 3:
+        return await message.reply_text(
+            "Usage:\n<code>/translate en Hello World</code>"
+        )
+
+    lang = message.command[1]
+    text = " ".join(message.command[2:])
+
+    try:
+        translated = GoogleTranslator(source="auto", target=lang).translate(text)
+        await message.reply_text(
+            f"<blockquote expandable>\n"
+            f"🌐<b>Translate Completed</b>\n\n"
+            f"<b>Language:</b> {lang}\n"
+            f"<b>Result:</b> <code>{translated}</code>\n"
+            f"</blockquote>"
+        )
+    except Exception as e:
+        await message.reply_text(f"❌ Error: <code>{e}</code>")
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+@app.on_message(filters.command("mediainfo") & filters.private)
+async def mediainfo_cmd(client, message):
+
+    if not message.reply_to_message:
+        return await message.reply_text(
+            "❌ Reply to a video or document."
+        )
+
+    media = (
+        message.reply_to_message.video
+        or message.reply_to_message.document
+    )
+
+    if not media:
+        return await message.reply_text(
+            "❌ Reply to a video or document."
+        )
+
+    status = await message.reply_text(
+        "📥 Downloading file..."
+    )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+
+        file_path = await message.reply_to_message.download(
+            file_name=temp_dir
+        )
+
+        await status.edit_text(
+            "🔍 Reading MediaInfo..."
+        )
+
+        info = MediaInfo.parse(file_path)
+
+        html = "<h2>📄 Media Information</h2>"
+
+        for track in info.tracks:
+
+            html += f"<h3>{track.track_type}</h3>"
+
+            data = track.to_data()
+
+            for key, value in data.items():
+
+                if value not in [None, "", [], {}]:
+
+                    html += (
+                        f"<p><b>{key}</b>: "
+                        f"{value}</p>"
+                    )
+
+        link = upload_to_telegraph(
+            media.file_name,
+            html
+        )
+        
+        await status.delete()
+
+        caption = f"""
+        <blockquote><b>📄 MEDIA INFORMATION</b></blockquote>
+
+        📁 <b>File Name</b> <code>{media.file_name}</code>
+        ✅ <b>MediaInfo generated successfully.</b>
+
+        🌐 <b>The complete MediaInfo report has been uploaded to Telegraph.</b>
+
+       👇 Click the button below to view it.
+        """
+
+        await message.reply_photo(
+            photo="https://graph.org/file/c658f88f509dd0c786ac5-44bdf2692f1ca00b29.jpg",
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "📄 Open Telegraph",
+                                url=link
+                            ) 
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "• ᴄʟᴏsᴇ •",
+                                callback_data="close"
+                            )
+                        ]
+                    ]
+            )
+        )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #      
 
 if __name__ == "__main__":
     keep_alive()  
