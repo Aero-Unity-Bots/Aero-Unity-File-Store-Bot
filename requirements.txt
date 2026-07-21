@@ -10,5 +10,3 @@ aiohttp
 pytz
 syncedlyrics
 deep-translator
-pymediainfo
-telegraph
