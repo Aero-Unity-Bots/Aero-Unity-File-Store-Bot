@@ -120,6 +120,8 @@ version - View bot version
 support - Contact support
 storage - View storage usage
 speedtest - Test server speed
+lyrics - search the song name lyrics 
+translate - it translate the word is multi language 
 stats - Check bot users and statistics (Owner only)
 index - check Force sub index added (Owner only)
 addfsub - Add a channel to Force Subscribe (Owner | Admin only)
