@@ -119,7 +119,6 @@ privacy - View privacy policy
 version - View bot version
 support - Contact support
 storage - View storage usage
-analysis - View bot analytics
 speedtest - Test server speed
 stats - Check bot users and statistics (Owner only)
 index - check Force sub index added (Owner only)
@@ -132,13 +131,15 @@ adminlist - check admins list (Owner only)
 ban - ban a user (Owner only)
 unban - unban a user (Owner Only) 
 banlist - check ban user list (Owner Only)
-restart - Restart the bot (Owner Only)
-clearcache - Clear bot cache (Owner only)
 fileinfo - View file information (Owner only)
 backupdb - Backup database (Owner only)
 restoredb - Restore database (Owner only)
-cleanup - Clean cache & temp data (Owner only)
-dbinfo - View database information (Owner only)
+adddb - to add MongoDB urls (support 5)(Owner only)
+removedb - Remove MongoDB url (Owner only)
+dblist - check Db lits added
+dbstatus - check db is added and online
+ip - check out ip address (Owner only)
+mediainfo - check the files info (Owner only)
 filestats - View file statistics (Owner only)
 broadcast - Send message to all users (Owner only)
 ```
