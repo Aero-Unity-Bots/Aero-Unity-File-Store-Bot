@@ -11,15 +11,12 @@ from config import *
 from pyrogram.types import InputMediaPhoto
 from pyrogram.enums import ParseMode, ChatMemberStatus
 from pyrogram.errors import FloodWait, UserNotParticipant
-from pymediainfo import MediaInfo
-from telegraph import Telegraph
 
 # ------------------------- #
 # Don't Remove Credit 
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-import tempfile
 import io
 import shutil 
 from contextlib import redirect_stdout, redirect_stderr
@@ -36,7 +33,6 @@ import sys
 import platform
 import random
 import psutil
-import math
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -51,26 +47,6 @@ import speedtest
 import logging
 import pytz
 import syncedlyrics
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
-telegraph = Telegraph()
-telegraph.create_account(short_name="MediaInfoBot")
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
-def upload_to_telegraph(title, html):
-    page = telegraph.create_page(
-        title=title,
-        html_content=html
-    )
-    return "https://telegra.ph/" + page["path"]
 
 # ------------------------- #
 # Don't Remove Credit 
@@ -377,10 +353,8 @@ async def batch_command(client, message):
         "removedb",
         "dblist",
         "dbstatus",
-        "ip",
         "lyrics",
-        "translate",
-        "mediainfo"
+        "translate"
     ])
 )
 async def handle_batch(client, message):
@@ -1044,10 +1018,8 @@ async def broadcast(client, message: Message):
         "removedb",
         "dblist",
         "dbstatus",
-        "ip",
         "lyrics",
-        "translate",
-        "mediainfo"
+        "translate"
         
     ])
 )
@@ -2749,69 +2721,6 @@ async def dbstatus_cmd(client, message):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
-@app.on_message(filters.command("ip"))
-async def ip_lookup(client, message):
-    if len(message.command) < 2:
-        return await message.reply_text(
-            "<blockquote expandable>"
-            "🌐 <b>IP Lookup</b>\n\n"
-            "<b>Usage:</b>"
-            "<code>/ip 8.8.8.8</code>\n\n"
-            "<b>Example:</b>"
-            "<code>/ip 1.1.1.1</code>"
-            "</blockquote>",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close_ip")]]
-            )
-        )
-
-    ip = message.command[1]
-
-    try:
-        data = requests.get(f"http://ip-api.com/json/{ip}").json()
-
-        if data["status"] != "success":
-            raise Exception()
-
-        text = f"""
-<blockquote expandable>
-🌐 <b>IP Information</b>
-
-🖥 <b>IP:</b> <code>{data['query']}</code>
-🌍 <b>Country:</b> {data['country']}
-📍 <b>Region:</b> {data['regionName']}
-🏙 <b>City:</b> {data['city']}
-📮 <b>ZIP:</b> {data['zip']}
-🛰 <b>ISP:</b> {data['isp']}
-🕒 <b>Timezone:</b> {data['timezone']}
-📡 <b>Latitude:</b> {data['lat']}
-📡 <b>Longitude:</b> {data['lon']}
-</blockquote>
-"""
-    except:
-        text = """
-<blockquote expandable>
-❌ <b>Invalid IP Address</b>
-
-• Please enter a valid IPv4 address.
-
-<b>Example:</b>
-<code>/ip 8.8.8.8</code>
-</blockquote>
-"""
-
-    await message.reply_text(
-        text,
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close_ip")]]
-        )
-    )
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
 @app.on_message(filters.command("lyrics"))
 async def lyrics_cmd(client, message):
 
@@ -2992,101 +2901,6 @@ async def translate_cmd(client, message):
         )
     except Exception as e:
         await message.reply_text(f"❌ Error: <code>{e}</code>")
-
-# ------------------------- #
-# Don't Remove Credit 
-# Owner @Mr_Mohammed_29
-# ------------------------- #
-
-@app.on_message(filters.command("mediainfo") & filters.private)
-async def mediainfo_cmd(client, message):
-
-    if not message.reply_to_message:
-        return await message.reply_text(
-            "❌ Reply to a video or document."
-        )
-
-    media = (
-        message.reply_to_message.video
-        or message.reply_to_message.document
-    )
-
-    if not media:
-        return await message.reply_text(
-            "❌ Reply to a video or document."
-        )
-
-    status = await message.reply_text(
-        "📥 Downloading file..."
-    )
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-
-        file_path = await message.reply_to_message.download(
-            file_name=temp_dir
-        )
-
-        await status.edit_text(
-            "🔍 Reading MediaInfo..."
-        )
-
-        info = MediaInfo.parse(file_path)
-
-        html = "<h2>📄 Media Information</h2>"
-
-        for track in info.tracks:
-
-            html += f"<h3>{track.track_type}</h3>"
-
-            data = track.to_data()
-
-            for key, value in data.items():
-
-                if value not in [None, "", [], {}]:
-
-                    html += (
-                        f"<p><b>{key}</b>: "
-                        f"{value}</p>"
-                    )
-
-        link = upload_to_telegraph(
-            media.file_name,
-            html
-        )
-        
-        await status.delete()
-
-        caption = f"""
-        <blockquote><b>📄 MEDIA INFORMATION</b></blockquote>
-
-        📁 <b>File Name</b> <code>{media.file_name}</code>
-        ✅ <b>MediaInfo generated successfully.</b>
-
-        🌐 <b>The complete MediaInfo report has been uploaded to Telegraph.</b>
-
-       👇 Click the button below to view it.
-        """
-
-        await message.reply_photo(
-            photo="https://graph.org/file/c658f88f509dd0c786ac5-44bdf2692f1ca00b29.jpg",
-            caption=caption,
-            reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                "📄 Open Telegraph",
-                                url=link
-                            ) 
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                "• ᴄʟᴏsᴇ •",
-                                callback_data="close"
-                            )
-                        ]
-                    ]
-            )
-        )
 
 # ------------------------- #
 # Don't Remove Credit 
