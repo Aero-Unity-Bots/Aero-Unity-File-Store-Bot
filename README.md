@@ -44,8 +44,6 @@
 - 🆘 **Support Center** with quick support links
 - 💾 **Storage Usage** statistics
 - ⚡ **Server Speed Test**
-- 🎬 **MediaInfo** with Telegraph report generation
-- 🌐 **IP Address Lookup** with ISP & Location details
 - 🌍 **Text Translation** into multiple languages
 - 🎵 **Song Lyrics Search**
 - 🖼️ Premium UI with Images & Inline Buttons
@@ -139,8 +137,6 @@ adddb - to add MongoDB urls (support 5)(Owner only)
 removedb - Remove MongoDB url (Owner only)
 dblist - check Db lits added
 dbstatus - check db is added and online
-ip - check out ip address (Owner only)
-mediainfo - check the files info (Owner only)
 filestats - View file statistics (Owner only)
 broadcast - Send message to all users (Owner only)
 ```
