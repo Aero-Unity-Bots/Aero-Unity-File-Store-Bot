@@ -8,6 +8,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import DESCENDING
 from config import MONGO_URI
 from datetime import datetime
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
 import json
 import os
 import time
@@ -19,6 +25,14 @@ import time
 
 client = AsyncIOMotorClient(MONGO_URI)
 db = client.filebot
+db = client["FileStoreBot"]
+multi_db = db["multi_database"]
+db_settings = db["db_settings"]
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 files = db.files
 users = db.users
@@ -292,6 +306,11 @@ async def total_files():
     return await files.count_documents({})
 
 # ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+# ------------------------- #
 # DOWNLOAD COUNT
 # ------------------------- #
 
@@ -306,6 +325,10 @@ async def increase_download(file_unique_id):
         }
     )
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # TODAY FILES
@@ -325,6 +348,10 @@ async def today_files():
         }
     )
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # WEEK FILES
@@ -344,6 +371,10 @@ async def week_files():
         }
     )
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # STORAGE
@@ -358,7 +389,11 @@ async def storage_used():
         total += file.get("file_size", 0)
 
     return total
-
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # TOP USERS
@@ -394,6 +429,11 @@ async def top_uploaders(limit=10):
     ).to_list(length=limit)
 
 # ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+# ------------------------- #
 # DATABASE BACKUP
 # ------------------------- #
 
@@ -406,6 +446,10 @@ COLLECTIONS = {
     "banned": banned
 }
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 async def export_database(filepath="backup.json"):
 
@@ -432,6 +476,10 @@ async def export_database(filepath="backup.json"):
 
     return filepath
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # DATABASE RESTORE
@@ -465,6 +513,10 @@ async def import_database(filepath):
 
     return True
 
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
 
 # ------------------------- #
 # DATABASE INFORMATION
@@ -479,3 +531,102 @@ async def database_info():
         info[name] = await collection.count_documents({})
 
     return info
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+# =====================================================
+# Multi Database Functions
+# =====================================================
+
+async def add_database(name, mongo_uri):
+
+    await multi_db.update_one(
+        {"name": name},
+        {
+            "$set": {
+                "name": name,
+                "mongo_uri": mongo_uri,
+                "status": "ONLINE"
+            }
+        },
+        upsert=True
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def remove_database(name):
+
+    await multi_db.delete_one(
+        {"name": name}
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_database(name):
+
+    return await multi_db.find_one(
+        {"name": name}
+    )
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_all_databases():
+
+    data = []
+
+    async for db in multi_db.find():
+
+        data.append(db)
+
+    return data
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def set_active_database(name):
+
+    await db_settings.update_one(
+        {"_id": "active_db"},
+        {
+            "$set": {
+                "name": name
+            }
+        },
+        upsert=True
+    )
+    
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
+
+async def get_active_database():
+
+    data = await db_settings.find_one(
+        {"_id": "active_db"}
+    )
+
+    if data:
+
+        return data["name"]
+
+    return None
+
+# ------------------------- #
+# Don't Remove Credit 
+# Owner @Mr_Mohammed_29
+# ------------------------- #
