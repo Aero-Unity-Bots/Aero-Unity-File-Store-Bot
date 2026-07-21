@@ -43,16 +43,19 @@
 - 🏷️ **Version Information** with developer details
 - 🆘 **Support Center** with quick support links
 - 💾 **Storage Usage** statistics
-- 📊 **Bot Analytics** (CPU, RAM, Disk, Uptime, Storage)
 - ⚡ **Server Speed Test**
-- 🖼️ Premium UI with images and inline buttons
+- 🎬 **MediaInfo** with Telegraph report generation
+- 🌐 **IP Address Lookup** with ISP & Location details
+- 🌍 **Text Translation** into multiple languages
+- 🎵 **Song Lyrics Search**
+- 🖼️ Premium UI with Images & Inline Buttons
 
 ### 👑 Owner & Admin Features
-- 📥 **Batch Indexing** of Telegram channel posts
-- 📈 **Bot Statistics** (Users & Database)
-- 📑 **Force Subscribe Index** viewer
-- ➕ **Add Force Subscribe** channels
-- ➖ **Remove Force Subscribe** channels
+- 📥 **Batch Indexing** of Telegram Channel Posts
+- 📈 **Bot Statistics**
+- 📑 **Force Subscribe Index** Viewer
+- ➕ **Add Force Subscribe** Channels
+- ➖ **Remove Force Subscribe** Channels
 - 📋 **Force Subscribe List**
 - ➕ **Add Admin**
 - ➖ **Remove Admin**
@@ -61,25 +64,28 @@
 - 🔓 **Unban Users**
 - 🚫 **Banned Users List**
 - 🔄 **Restart Bot**
-- 🧹 **Clear Bot Cache**
-- 📄 **Detailed File Information**
 - 💾 **Database Backup**
 - ♻️ **Database Restore**
-- 🧹 **Cleanup Temporary Cache**
-- 🗄️ **Database Information**
 - 📂 **File Statistics**
-- 📢 **Broadcast Messages** to all users
+- ➕ **Add MongoDB Database**
+- ➖ **Remove MongoDB Database**
+- 📋 **Database List**
+- 🗄️ **Database Status**
+- 📢 **Broadcast Messages** to All Users
 
 ### ⚙️ Technical Features
 - 🚀 Built with **Pyrogram 2.x**
-- 🗄️ MongoDB (Motor) Database
-- ☁️ Render Deployment Ready
-- ⚡ Async & High-Speed Performance
-- 🔒 Secure Force Subscribe System
-- 📂 Unlimited File Storage
-- 🔗 Instant Shareable File Links
-- 🎨 Premium Command UI
-- 🖥️ 24/7 Uptime Support
+- 🗄️ **MongoDB (Motor)** Database
+- ☁️ **Render Deployment Ready**
+- ⚡ **Async & High-Speed Performance**
+- 🔒 **Secure Force Subscribe System**
+- 📂 **Unlimited File Storage**
+- 🔗 **Instant Shareable File Links**
+- 📊 **Multi-Database Support (Up to 5 MongoDB Databases)**
+- 🌐 **Telegraph Integration**
+- 🎨 **Premium Command UI**
+- 🖥️ **24/7 Uptime Support**
+
 
 📂 Supported Media Types
 
