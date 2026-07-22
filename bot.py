@@ -149,7 +149,6 @@ from database import (
     get_file_by_unique_id,
     today_files,
     week_files,
-    top_uploaders,
     add_database,
     get_all_databases,
     remove_database as remove_saved_db,
