@@ -39,11 +39,7 @@
 - 📦 **Batch File Store** for multiple channel messages (Owner/Admin)
 - 🆔 **User ID** lookup command
 - 💚 **Alive Check** to verify bot status
-- 🔒 **Privacy Policy** command
-- 🏷️ **Version Information** with developer details
-- 🆘 **Support Center** with quick support links
-- 💾 **Storage Usage** statistics
-- ⚡ **Server Speed Test**
+- ⚠️ **Disclaimer Center** (Privacy, Version & Support)
 - 🌍 **Text Translation** into multiple languages
 - 🎵 **Song Lyrics Search**
 - 🖼️ Premium UI with Images & Inline Buttons
@@ -62,9 +58,6 @@
 - 🔓 **Unban Users**
 - 🚫 **Banned Users List**
 - 🔄 **Restart Bot**
-- 💾 **Database Backup**
-- ♻️ **Database Restore**
-- 📂 **File Statistics**
 - ➕ **Add MongoDB Database**
 - ➖ **Remove MongoDB Database**
 - 📋 **Database List**
@@ -83,7 +76,6 @@
 - 🌐 **Telegraph Integration**
 - 🎨 **Premium Command UI**
 - 🖥️ **24/7 Uptime Support**
-
 
 📂 Supported Media Types
 
@@ -113,10 +105,7 @@ batch - Store multiple messages from channel (Owner/Admin only)
 system - Show bot system status (CPU, RAM, uptime, etc.)
 id - Get your Telegram user ID
 alive - Check bot is alive or not
-privacy - View privacy policy
-version - View bot version
-support - Contact support
-storage - View storage usage
+disclaimer - To Read the copyrights
 speedtest - Test server speed
 lyrics - search the song name lyrics 
 translate - it translate the word is multi language 
@@ -131,13 +120,10 @@ adminlist - check admins list (Owner only)
 ban - ban a user (Owner only)
 unban - unban a user (Owner Only) 
 banlist - check ban user list (Owner Only)
-backupdb - Backup database (Owner only)
-restoredb - Restore database (Owner only)
 adddb - to add MongoDB urls (support 5)(Owner only)
 removedb - Remove MongoDB url (Owner only)
-dblist - check Db lits added
-dbstatus - check db is added and online
-filestats - View file statistics (Owner only)
+dblist - check Db lits added (Owner only)
+dbstatus - check db is added and online (Owner only)
 broadcast - Send message to all users (Owner only)
 ```
 ---
