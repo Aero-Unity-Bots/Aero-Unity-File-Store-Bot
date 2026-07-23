@@ -489,6 +489,12 @@ async def check_force_sub(client, user_id):
 # Owner @Mr_Mohammed_29
 # ------------------------- #
 
+@app.on_message(filters.photo & filters.private & filters.user(OWNER_ID))
+async def get_photo_id(client, message):
+    await message.reply_text(
+        f"<b>Photo File ID:</b>\n\n<code>{message.photo.file_id}</code>"
+    )
+
 # START + LINK HANDLER
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
