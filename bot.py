@@ -111,9 +111,9 @@ logging.basicConfig(level=logging.INFO)
 # ------------------------- #
 
 IMAGES = [
-    "https://graph.org/file/98245197c3a4185b49dbe-3df65fb012e4195cff.jpg",
-    "https://graph.org/file/27dd5451f160ce28dadd4-8ca0a7d6480451adc8.jpg",
-    "https://graph.org/file/0e77ba48a8b7a3b09296f-362372bee0d84fd217.jpg"
+    "AgACAgUAAxkBAAEgw5VqYV5mnCXGO5I4iYUfHTkDxH0PFgACPRJrG5NGsVYFZYW4LzKlfwEAAwIAA3kAAz0E",
+    "AgACAgUAAxkBAAEgw5NqYV5BT6XN2s6pFivk_mTBvi0GCgACgxNrG5SDEFcIq_CuhN8w-wEAAwIAA3kAAz0E",
+    "AgACAgUAAxkBAAEgw41qYV14IZh87Pg_DGwRcGKp_QvAcAACOxlrG5SDCFce687QYZ1CfQEAAwIAA3cAAz0E"
 ]
 
 # ------------------------- #
