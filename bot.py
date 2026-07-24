@@ -914,8 +914,7 @@ async def save_media(client, message: Message):
 async def stats(client, message: Message):
 
     msg = await message.reply_text(
-        "📊 <b>Extracting Bot Statistics...</b>\n\n"
-        "**⏳ Please wait...**",
+        "<b>**Extracting Bot Statistics...**</b>",
         parse_mode=ParseMode.HTML
     )
 
