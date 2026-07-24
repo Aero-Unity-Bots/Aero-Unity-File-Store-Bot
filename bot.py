@@ -125,6 +125,9 @@ IMAGES = [
 from database import (
     save_file,
     get_file,
+    increase_single_links,
+    increase_batch_links,
+    get_link_stats,
     increase_download,
     add_user,
     get_all_users,
@@ -409,6 +412,8 @@ async def handle_batch(client, message):
 
         link = f"https://t.me/{bot_username}?start={encoded}"
 
+        await increase_batch_links()
+
         await message.reply_text(
             f"✅ ʙᴀᴛᴄʜ ʟɪɴᴋs ɢᴇɴᴇʀᴀᴛᴇᴅ\n\n{link}"
         )
@@ -493,7 +498,7 @@ async def check_force_sub(client, user_id):
 @app.on_message(filters.photo & filters.private & filters.user(OWNER_ID))
 async def get_photo_id(client, message):
     await message.reply_text(
-        f"<b>Photo File ID:</b>\n\n<code>{message.photo.file_id}</code>"
+        f"<b>Photo or Image or Pic File ID:</b>\n\n<code>{message.photo.file_id}</code>"
     )
 
 # START + LINK HANDLER
@@ -893,8 +898,10 @@ async def save_media(client, message: Message):
         f"📁 {getattr(file, 'file_name', file_type)}"
     )
 
-    link = f"https://t.me/{BOT_USERNAME}?start={file_unique_id}"
+    await increase_single_links()
 
+    link = f"https://t.me/{BOT_USERNAME}?start={file_unique_id}"
+    
     await message.reply_text(f"🔗 𝗛𝗲𝗿𝗲 𝗜𝘀 𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸:\n{link}")
     
 # ------------------------- #
