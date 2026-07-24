@@ -913,6 +913,12 @@ async def save_media(client, message: Message):
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats(client, message: Message):
 
+    msg = await message.reply_text(
+        "📊 <b>Extracting Bot Statistics...</b>\n\n"
+        "**⏳ Please wait...**",
+        parse_mode=ParseMode.HTML
+    )
+
     start = time.time()
 
     total = await total_users()
@@ -939,7 +945,7 @@ async def stats(client, message: Message):
         ]
     )
 
-    await message.reply_text(
+    await msg.edit_text(
         f"""⌬ <b>𝗕𝗢𝗧 𝗦𝗧𝗔𝗧𝗜𝗦𝗧𝗜𝗖𝗦 :</b>
 
 ┎ <b>Bᴏᴛ Uᴘᴛɪᴍᴇ :</b> {hours}h {minutes}m {seconds}s
